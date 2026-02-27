@@ -1,0 +1,17 @@
+import { HeartHandshake, MapPin, Phone, Mail, } from 'lucide-react';
+import Link from 'next/link';
+import React from 'react';
+
+const Footer = () => {
+    return (
+        <footer className="bg-slate-900 text-slate-300"> {/* Main Footer Content */} <div className="max-w-7xl mx-auto px-6 pt-20 pb-12"> <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12"> {/* Column 1: Brand & About */} <div className="space-y-6"> <Link href="/" className="flex items-center gap-2 group"> <div className="bg-teal-500 p-1.5 rounded-lg"> <HeartHandshake className="text-white" size={24} /> </div> <h2 className="text-2xl font-black text-white tracking-tight"> Care<span className="text-teal-500">Nest</span> </h2> </Link> <p className="text-sm leading-relaxed text-slate-400"> Providing compassionate, verified, and professional caregiving services for your loved ones. We bring peace of mind directly to your doorstep. </p> <div className="flex gap-4">
+            {/* <SocialIcon icon={<Facebook size={18} />} /> */}
+            {/* <SocialIcon icon={<Twitter size={18} />} /> */}
+            {/* <SocialIcon icon={<Instagram size={18} />} /> */}
+            {/* <SocialIcon icon={<Linkedin size={18} />} /> */}
+        </div> </div> {/* Column 2: Quick Links */} <div> <h4 className="text-white font-bold mb-6 uppercase tracking-widest text-xs">Platform</h4> <ul className="space-y-4 text-sm"> <li><Link href="/services">Our Services</Link></li> <li><Link href="/caretakers">Find Caretakers</Link></li> <li><Link href="/about">About Our Mission</Link></li> <li><Link href="/careers">Join as a Caregiver</Link></li> </ul> </div> {/* Column 3: Contact Info */} <div> <h4 className="text-white font-bold mb-6 uppercase tracking-widest text-xs">Get in Touch</h4> <ul className="space-y-4 text-sm"> <li className="flex items-start gap-3"> <MapPin size={18} className="text-teal-500 shrink-0" /> <span>123 Care Street, Gulshan 2,<br />Dhaka, Bangladesh</span> </li> <li className="flex items-center gap-3"> <Phone size={18} className="text-teal-500 shrink-0" /> <span>+880 1XXX-XXXXXX</span> </li> <li className="flex items-center gap-3"> <Mail size={18} className="text-teal-500 shrink-0" /> <span>support@carenest.com</span> </li> </ul> </div> {/* Column 4: Newsletter */} <div> <h4 className="text-white font-bold mb-6 uppercase tracking-widest text-xs">Newsletter</h4> <p className="text-sm text-slate-400 mb-4">Stay updated with latest care tips and news.</p> <form className="space-y-3"> <input type="email" placeholder="Your email address" className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-teal-500/50 transition" /> <button className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl text-sm transition shadow-lg shadow-teal-900/20"> Subscribe </button> </form> </div> </div> {/* Bottom Bar */} <div className="mt-20 pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-6 text-xs text-slate-500"> <p>© Care Nest Limited. All rights reserved.</p> <div className="flex gap-8"> <Link href="/privacy" className="hover:text-teal-500 transition">Privacy Policy</Link> <Link href="/terms" className="hover:text-teal-500 transition">Terms of Service</Link> <Link href="/cookies" className="hover:text-teal-500 transition">Cookie Settings</Link> </div> </div> </div> </footer>
+
+    );
+};
+
+export default Footer;
