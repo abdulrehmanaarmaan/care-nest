@@ -30,7 +30,7 @@
     "**/*.mts",
     "**/*.ts",
     "**/*.tsx"
-  ],
+, "src/lib/authOptions.ts"  ],
   "exclude": [
     "node_modules"
   ]

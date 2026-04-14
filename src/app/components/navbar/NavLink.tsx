@@ -3,9 +3,9 @@ import React, { ComponentProps } from 'react';
 
 type NavLinkProps = ComponentProps<typeof Link>
 
-const NavLink = ({ href, children, ...rest }: NavLinkProps) => {
+const NavLink = ({ href, children }: NavLinkProps) => {
     return (
-        <Link href={href} className='hover:text-teal-600 transition' {...rest}>{children}</Link>
+        <Link href={href} className='text-sm font-bold text-slate-700 transition hover:text-teal-600'>{children}</Link>
     );
 };
 
