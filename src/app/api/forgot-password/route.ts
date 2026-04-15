@@ -31,7 +31,7 @@ export async function POST(req: Request) {
             { expiresIn: "1h" }
         );
 
-        const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${token}`;
+        const resetLink = `${process.env.NEXT_PUBLIC_APP_URL || "https://care-nest-three.vercel.app"}/reset-password?token=${token}`;
 
         // Send email
         await sendEmail({
