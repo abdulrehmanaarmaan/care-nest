@@ -117,7 +117,7 @@ const MyBookings = () => {
                                                 <Link href={`/dashboard/my-bookings/${booking?._id}`} className="p-2.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-all" title="View Details">
                                                     <FaEye size={16} />
                                                 </Link>
-                                                {booking?.status === 'Pending' && (
+                                                {booking?.status !== 'Cancelled' && (
                                                     <button onClick={() => cancelBooking(booking?._id)} className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all cursor-pointer" title="Cancel Booking">
                                                         <FaTimes size={16} />
                                                     </button>

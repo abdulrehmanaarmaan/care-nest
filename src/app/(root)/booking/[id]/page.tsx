@@ -1,8 +1,8 @@
 'use client'
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import useServiceInfo from '../../../../hooks/useServiceInfo';
 import { FaArrowLeft, FaArrowRight, FaCalendarAlt, FaShieldAlt } from 'react-icons/fa';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
@@ -10,6 +10,7 @@ import Swal from 'sweetalert2';
 import Link from 'next/link';
 import Loader from '../../loading';
 import useCrudState from '../../../../hooks/useCrudState';
+import { getBooking } from '../../../server/actions/bookings';
 
 const Booking = () => {
 
@@ -41,6 +42,38 @@ const Booking = () => {
 
     const { name, email } = data?.user || {}
 
+    const [existingBookingId, setExistingBookingId] = useState("")
+
+    const { data: existingBooking } = useQuery({
+        queryKey: ['existingBooking', existingBookingId],
+        queryFn: async () => {
+            const result = await fetch(`/api/bookings/${existingBookingId}`)
+            return result.json()
+        },
+        enabled: !!existingBookingId
+    })
+
+    useEffect(() => {
+        // const urlBookingId = new URLSearchParams(window.location.search).get('bookingId');
+        const savedBookingId = localStorage.getItem('pendingBookingId');
+
+        const finalId = savedBookingId;
+
+        if (finalId) {
+            setExistingBookingId(finalId);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!existingBookingId) return;
+
+        setValue('quantity', existingBooking?.pricing?.quantity)
+        setRegion(existingBooking?.location?.division)
+        setValue('district', existingBooking?.location?.district)
+        setValue('detailed_address', existingBooking?.location?.detailed_address)
+
+    }, [setValue, existingBooking, existingBookingId])
+
     if (loading || isLoading) {
         return <Loader></Loader>
     }
@@ -57,66 +90,92 @@ const Booking = () => {
     const selectedDistricts = selectedWarehouses.map(warehouse => warehouse?.district)
 
     const bookService = async data => {
-        click(true)
-        const { district, detailed_address } = data
+        try {
+            click(true)
+            const { district, detailed_address } = data
 
-        const booking = {
-            service_id: id,
-            service_name,
-            customer: {
-                name,
-                email
-            },
-            pricing: {
-                base_price: price,
-                quantity: Number(watchedQuantity),
-                unit: unit,
-                total_amount: totalCost,
-            },
-            location: {
-                division: region,
-                district: district,
-                detailed_address: detailed_address
-            },
-            status: 'Pending',
-            booked_at: new Date()
-        }
+            const booking = {
+                service_id: id,
+                service_name,
+                customer: {
+                    name,
+                    email
+                },
+                pricing: {
+                    base_price: price,
+                    quantity: Number(watchedQuantity),
+                    unit: unit,
+                    total_amount: totalCost,
+                },
+                location: {
+                    division: region,
+                    district: district,
+                    detailed_address: detailed_address
+                },
+                status: 'Pending',
+                payment_status: 'Unpaid',
+                booked_at: new Date()
+            }
 
-        if (!region || !selectedDistricts.includes(district)) {
-            click(false)
-            Swal.fire({
-                title: 'Warning!',
-                text: 'Select your division and district',
-                icon: "info"
-            })
-        }
-
-        else {
-            const response = await fetch('/api/bookings', {
-                headers: { 'Content-Type': 'application/json' },
-                method: 'POST',
-                body: JSON.stringify(booking)
-            })
-            const result = await response.json()
-            if (result?.success) {
+            if (!region || !selectedDistricts.includes(district)) {
                 click(false)
                 Swal.fire({
-                    title: 'Done!',
-                    text: 'Booked service',
-                    icon: "success"
+                    title: 'Warning!',
+                    text: 'Select your division and district',
+                    icon: "info"
                 })
-                    .then(() => {
-                        router.push('/dashboard/my-bookings')
-                    })
             }
+
             else {
-                click(false)
-                Swal.fire({
-                    title: 'Failed!',
-                    text: 'Failed to book',
-                    icon: "error"
-                })
+                let result;
+
+                if (existingBookingId) {
+
+                    const response = await fetch(`/api/bookings/${existingBookingId}`, {
+                        headers: { 'Content-Type': 'application/json' },
+                        method: 'PATCH',
+                        body: JSON.stringify(booking)
+                    })
+
+                    result = await response.json()
+                }
+
+                else {
+                    const response = await fetch('/api/bookings', {
+                        headers: { 'Content-Type': 'application/json' },
+                        method: 'POST',
+                        body: JSON.stringify(booking)
+                    })
+
+                    result = await response.json()
+
+                    if (result?.success) {
+                        localStorage.setItem('pendingBookingId', result?.bookingId)
+                    }
+                }
+
+                const res = await fetch("/api/create-checkout-session", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        serviceName: service_name,
+                        amount: totalCost,
+                        bookingId: existingBookingId || result?.bookingId,
+                        serviceId: id
+                    }),
+                });
+                const paymentResponse = await res.json();
+                window.location.href = paymentResponse.url;
             }
+        }
+        catch (error) {
+            Swal.fire({
+                title: 'Failed!',
+                text: 'Failed to book',
+                icon: "error"
+            })
         }
     }
 
@@ -187,7 +246,7 @@ const Booking = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <label className="block text-sm font-bold text-slate-700 ml-1">Division</label>
-                                    <select required defaultValue='Select Division' onChange={(e) => {
+                                    <select required value={region || 'Select Division'} onChange={(e) => {
                                         setRegion(e.target.value)
                                         setValue('district', 'Select District')
                                     }} className="w-full border-2 border-slate-100 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 outline-none bg-white font-medium text-slate-700 appearance-none cursor-pointer">
@@ -198,7 +257,7 @@ const Booking = () => {
                                 <div className="space-y-2">
                                     <label className="block text-sm font-bold text-slate-700 ml-1">District</label>
                                     <select onClick={() => disable(true)}
-                                        {...register('district', { required: true })} defaultValue='Select Division First' className="w-full border-2 border-slate-100 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 outline-none bg-white font-medium text-slate-700 appearance-none cursor-pointer">
+                                        {...register('district', { required: true })} value={watch('district') || ''} className="w-full border-2 border-slate-100 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 outline-none bg-white font-medium text-slate-700 appearance-none cursor-pointer">
                                         <option disabled={Boolean(isDisabled)}>{region ? 'Select District' : 'Select Division First'}</option>
                                         {selectedDistricts.map((district, i) => (<option key={i}>{district}</option>))}
                                     </select>
@@ -259,7 +318,7 @@ const Booking = () => {
                                     </>
                                 ) : (
                                     <>
-                                        <span>Confirm Booking</span>
+                                        <span>{existingBookingId ? 'Pay Now' : 'Confirm Booking'}</span>
                                         <FaArrowRight className="group-hover:translate-x-1.5 transition-transform duration-300" />
                                     </>
                                 )}

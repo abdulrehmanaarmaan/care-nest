@@ -22,11 +22,10 @@ export async function POST(req) {
         to: customer?.email,
         subject: `Order Confirmation - ${insertedId}`,
         html: invoiceHtml,
-        text: `Your order ${insertedId} has been confirmed. Total: $${pricing?.total_amount}.
-`,
+        text: `Your order ${insertedId} has been confirmed. Total: $${pricing?.total_amount}.`,
     });
 
-    return Response.json({ success: insertedId })
+    return Response.json({ success: true, bookingId: insertedId.toString() })
 }
 
 export async function GET(req) {
