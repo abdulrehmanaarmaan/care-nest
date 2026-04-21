@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useEffect } from 'react';
 import { FaArrowRight, FaCalendarCheck, FaCheckCircle } from 'react-icons/fa';
 
@@ -10,12 +10,37 @@ const PaymentSuccess = () => {
 
     const bookingId = params.get('bookingId')
 
+    const router = useRouter();
+
     useEffect(() => {
-        if (bookingId) {
-            localStorage.removeItem('pendingBookingId');
-            localStorage.removeItem('formData')
+        if (!bookingId) {
+            router.push('/');
+            return;
         }
-    }, [bookingId]);
+        let attempts = 0;
+        const verifyPayment = async () => {
+            while (attempts < 5) {
+                try {
+                    const res = await fetch(`/api/verify-payment?bookingId=${bookingId}`);
+                    const data = await res.json();
+                    if (data.success) {
+                        // ✅ Only clear AFTER real verification
+                        localStorage.removeItem('pendingBookingId');
+                        localStorage.removeItem('formData');
+                        return;
+                    }
+                } catch (error) {
+                    console.error("Verification failed:", error);
+                }
+                // ⏳ wait before retry
+                await new Promise(res => setTimeout(res, 1500));
+                attempts++;
+            }
+            // ❌ If still not verified → treat as failed
+            router.push('/payment-cancel');
+        };
+        verifyPayment();
+    }, [bookingId, router]);
 
     return (
         /* Pure white background with responsive vertical centering */

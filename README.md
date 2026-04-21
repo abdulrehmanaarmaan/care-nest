@@ -40,3 +40,4 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 1. Need to fix the issue of showing the warning alert when navigating back.
 2. Need to fix the API for email.
 3. Need to add query params in an API in 'booking/[id]'.
+4. Need to save to local storage based on service_name.

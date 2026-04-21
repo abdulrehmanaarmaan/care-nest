@@ -2,15 +2,13 @@
 import React, { useEffect, useState } from 'react';
 import useServiceInfo from '../../../../hooks/useServiceInfo';
 import { FaArrowLeft, FaArrowRight, FaCalendarAlt, FaShieldAlt } from 'react-icons/fa';
-import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { set, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
 import Swal from 'sweetalert2';
-import Link from 'next/link';
 import Loader from '../../loading';
 import useCrudState from '../../../../hooks/useCrudState';
-import { getBooking } from '../../../server/actions/bookings';
 
 const Booking = () => {
 
@@ -47,13 +45,13 @@ const Booking = () => {
     const [existingBookingId, setExistingBookingId] = useState("")
 
     const { data: existingBooking } = useQuery({
-        queryKey: ['existingBooking', existingBookingId, email, name],
+        queryKey: ['existingBooking', existingBookingId, email, name, id],
         queryFn: async () => {
-            if (!existingBookingId || !email || !name) return null;
-            const result = await fetch(`/api/bookings/${existingBookingId}?email=${email}&name=${name}`)
+            if (!existingBookingId || !email || !name || !service_name) return null;
+            const result = await fetch(`/api/bookings/${existingBookingId}?email=${email}&name=${name}&service_id=${id}`)
             return result.json()
         },
-        enabled: !!existingBookingId && !!email && !!name
+        enabled: !!existingBookingId && !!email && !!name && !!id
     })
 
     console.log(existingBooking)
@@ -76,29 +74,44 @@ const Booking = () => {
     useEffect(() => {
         if (!isHydrated) return;
         const timeout = setTimeout(() => {
-            localStorage.setItem('formData', JSON.stringify({ ...formData, region }))
+            localStorage.setItem(
+                'formData',
+                JSON.stringify({
+                    ...formData,
+                    region,
+                    service_id: id   // 🔥 REQUIRED
+                })
+            );
         }, 300)
         return () => clearTimeout(timeout)
-    }, [formData, isHydrated, region])
+    }, [formData, isHydrated, region, id])
 
     useEffect(() => {
+        if (!id) return;
         if (existingBooking) {
+            // ✅ Load from database (highest priority)
             reset({
                 quantity: existingBooking?.pricing?.quantity,
                 district: existingBooking?.location?.district,
                 detailed_address: existingBooking?.location?.detailed_address
-            })
-            setRegion(existingBooking?.location?.division)
+            });
+            setRegion(existingBooking?.location?.division);
         } else {
-            const saved = localStorage.getItem('formData')
+            // ✅ Load from localStorage ONLY if same service
+            const saved = localStorage.getItem('formData');
             if (saved) {
-                reset(JSON.parse(saved))
-                setRegion(JSON.parse(saved)?.region)
+                const parsed = JSON.parse(saved);
+                if (parsed?.service_id === id) {
+                    reset(parsed);
+                    setRegion(parsed?.region);
+                } else {
+                    localStorage.removeItem('formData'); // clean old service data
+                }
             }
         }
-        setIsHydrated(true)
+        setIsHydrated(true);
 
-    }, [existingBooking, reset])
+    }, [existingBooking, reset, id])
 
     if (loading || isLoading) {
         return <Loader></Loader>

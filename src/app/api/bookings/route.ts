@@ -1,3 +1,4 @@
+import { bookingConfirmation } from "../../../lib/bookingConfirmation";
 import { collections, dbConnect } from "../../../lib/dbConnect"
 import { orderInvoice } from "../../../lib/orderInvoice";
 import { sendEmail } from "../../../lib/sendEmail";
@@ -10,20 +11,20 @@ export async function POST(req) {
 
     const { insertedId } = result
 
-    // const invoiceHtml = orderInvoice({ orderId: insertedId.toString(), ...booking });
+    const emailHtml = bookingConfirmation({ _id: insertedId.toString(), ...booking });
 
-    const { customer, pricing } = booking
+    const { customer } = booking
 
     if (!customer?.email) {
         return Response.json({ success: false, message: "Missing email" });
     }
 
-    // await sendEmail({
-    // to: customer?.email,
-    // subject: `Order Confirmation - ${insertedId}`,
-    // html: invoiceHtml,
-    // text: `Your order ${insertedId} has been confirmed. Total: $${pricing?.total_amount}.`,
-    // });
+    await sendEmail({
+        to: customer?.email,
+        subject: `Booking Received - ${insertedId}`,
+        html: emailHtml,
+        text: `Your booking ${insertedId} is created. Please complete payment.`,
+    });
 
     return Response.json({ success: true, bookingId: insertedId })
 }

@@ -9,8 +9,9 @@ export async function GET(req, { params }) {
 
     const email = searchParams.get("email")
     const name = searchParams.get("name")
+    const service_id = searchParams.get("service_id")
 
-    const query = { _id: new ObjectId(id), "customer.email": email, "customer.name": name }
+    const query = { _id: new ObjectId(id), "customer.email": email, "customer.name": name, service_id }
 
     const result = await dbConnect(collections?.bookings).findOne(query)
 
