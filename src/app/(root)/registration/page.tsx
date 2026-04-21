@@ -1,13 +1,13 @@
 'use client'
 import React from 'react';
 import Swal from 'sweetalert2';
-import { signIn } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 import { signUp } from '../../../server/actions/auth';
 import AuthButton from '../../components/auth/AuthButton';
 import usePasswordState from '../../../hooks/usePasswordState';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const Registration = () => {
 
@@ -21,9 +21,10 @@ const Registration = () => {
 
     const router = useRouter()
 
-    const currentPath = usePathname()
+    // const currentPath = usePathname()
 
-    // const { status } = useSession()
+    const { data } = useSession()
+    const { name, email } = data?.user || {}
 
     // if (status === 'authenticated') {
     // Swal.fire({
@@ -62,6 +63,7 @@ const Registration = () => {
             }
 
             else {
+                localStorage.setItem('userData', JSON.stringify({ name: name, email: email }))
                 Swal.fire({
                     title: 'Signed Up!',
                     text: 'You have successfully created your account',

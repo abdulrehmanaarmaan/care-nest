@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import NavLink from './NavLink';
 import Link from 'next/link';
 import { signOut, useSession } from 'next-auth/react';
+import useSignOutHandler from '../../../hooks/useSignOutHandler';
 
 
 const Navbar = () => {
@@ -11,6 +12,8 @@ const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
 
     const { status, data } = useSession()
+
+    const handleSignOut = useSignOutHandler()
 
     console.log(data)
 
@@ -56,7 +59,7 @@ const Navbar = () => {
                                 <span className="text-xs font-bold text-slate-700">{data?.user?.name?.split(' ')[0]}</span>
                             </div>
                             <button
-                                onClick={() => signOut({ callbackUrl: '/' })}
+                                onClick={handleSignOut}
                                 className="flex items-center gap-2 text-sm font-bold text-red-500 hover:text-red-600 transition cursor-pointer"
                             >
                                 <LogOut size={18} />
@@ -86,7 +89,7 @@ const Navbar = () => {
                     <div className="flex flex-col gap-4 mt-8 border-t border-slate-50 pt-8">
                         {status === 'authenticated' ? (
                             <button
-                                onClick={() => signOut({ callbackUrl: '/' })}
+                                onClick={handleSignOut}
                                 className="w-full text-center py-4 bg-red-50 text-red-600 rounded-2xl font-bold"
                             >
                                 Logout

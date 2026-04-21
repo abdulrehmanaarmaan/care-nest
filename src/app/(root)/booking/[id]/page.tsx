@@ -4,7 +4,7 @@ import useServiceInfo from '../../../../hooks/useServiceInfo';
 import { FaArrowLeft, FaArrowRight, FaCalendarAlt, FaShieldAlt } from 'react-icons/fa';
 import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
+import { set, useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
 import Swal from 'sweetalert2';
 import Link from 'next/link';
@@ -28,11 +28,13 @@ const Booking = () => {
 
     const [region, setRegion] = useState('')
 
-    const { register, watch, handleSubmit, setValue } = useForm()
+    const { register, watch, handleSubmit, setValue, reset } = useForm()
 
     const watchedQuantity = watch('quantity', 1)
 
     const { data } = useSession()
+
+    console.log(data)
 
     const router = useRouter()
 
@@ -45,13 +47,16 @@ const Booking = () => {
     const [existingBookingId, setExistingBookingId] = useState("")
 
     const { data: existingBooking } = useQuery({
-        queryKey: ['existingBooking', existingBookingId],
+        queryKey: ['existingBooking', existingBookingId, email, name],
         queryFn: async () => {
-            const result = await fetch(`/api/bookings/${existingBookingId}`)
+            if (!existingBookingId || !email || !name) return null;
+            const result = await fetch(`/api/bookings/${existingBookingId}?email=${email}&name=${name}`)
             return result.json()
         },
-        enabled: !!existingBookingId
+        enabled: !!existingBookingId && !!email && !!name
     })
+
+    console.log(existingBooking)
 
     useEffect(() => {
         // const urlBookingId = new URLSearchParams(window.location.search).get('bookingId');
@@ -64,15 +69,36 @@ const Booking = () => {
         }
     }, []);
 
+    const [isHydrated, setIsHydrated] = useState(false)
+
+    const formData = watch()
+
     useEffect(() => {
-        if (!existingBookingId) return;
+        if (!isHydrated) return;
+        const timeout = setTimeout(() => {
+            localStorage.setItem('formData', JSON.stringify({ ...formData, region }))
+        }, 300)
+        return () => clearTimeout(timeout)
+    }, [formData, isHydrated, region])
 
-        setValue('quantity', existingBooking?.pricing?.quantity)
-        setRegion(existingBooking?.location?.division)
-        setValue('district', existingBooking?.location?.district)
-        setValue('detailed_address', existingBooking?.location?.detailed_address)
+    useEffect(() => {
+        if (existingBooking) {
+            reset({
+                quantity: existingBooking?.pricing?.quantity,
+                district: existingBooking?.location?.district,
+                detailed_address: existingBooking?.location?.detailed_address
+            })
+            setRegion(existingBooking?.location?.division)
+        } else {
+            const saved = localStorage.getItem('formData')
+            if (saved) {
+                reset(JSON.parse(saved))
+                setRegion(JSON.parse(saved)?.region)
+            }
+        }
+        setIsHydrated(true)
 
-    }, [setValue, existingBooking, existingBookingId])
+    }, [existingBooking, reset])
 
     if (loading || isLoading) {
         return <Loader></Loader>
@@ -90,8 +116,8 @@ const Booking = () => {
     const selectedDistricts = selectedWarehouses.map(warehouse => warehouse?.district)
 
     const bookService = async data => {
+        click(true)
         try {
-            click(true)
             const { district, detailed_address } = data
 
             const booking = {
@@ -118,12 +144,14 @@ const Booking = () => {
             }
 
             if (!region || !selectedDistricts.includes(district)) {
-                click(false)
                 Swal.fire({
                     title: 'Warning!',
                     text: 'Select your division and district',
                     icon: "info"
                 })
+                    .then(() => {
+                        click(false)
+                    })
             }
 
             else {
@@ -168,14 +196,18 @@ const Booking = () => {
                 });
                 const paymentResponse = await res.json();
                 window.location.href = paymentResponse.url;
+                click(false)
             }
         }
-        catch (error) {
+        catch {
             Swal.fire({
                 title: 'Failed!',
                 text: 'Failed to book',
                 icon: "error"
             })
+                .then(() => {
+                    click(false)
+                })
         }
     }
 
@@ -318,7 +350,7 @@ const Booking = () => {
                                     </>
                                 ) : (
                                     <>
-                                        <span>{existingBookingId ? 'Pay Now' : 'Confirm Booking'}</span>
+                                        <span>{existingBooking ? 'Pay Now' : 'Confirm Booking'}</span>
                                         <FaArrowRight className="group-hover:translate-x-1.5 transition-transform duration-300" />
                                     </>
                                 )}

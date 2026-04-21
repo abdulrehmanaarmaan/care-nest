@@ -23,7 +23,8 @@ const Login = () => {
 
     const router = useRouter()
 
-    const { status } = useSession()
+    const { status, data } = useSession()
+    const { name, email } = data?.user || {}
 
     // if (status === 'authenticated') {
     // Swal.fire({
@@ -67,6 +68,7 @@ const Login = () => {
         }
 
         else {
+            localStorage.setItem('userData', JSON.stringify({ name: name, email: email }))
             Swal.fire({
                 title: 'Logged In!',
                 text: 'Logged in successfully',

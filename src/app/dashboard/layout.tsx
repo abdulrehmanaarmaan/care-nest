@@ -6,11 +6,14 @@ import { FaBars, FaChevronLeft, FaClipboardList, FaSignOutAlt } from 'react-icon
 import UserMenu from '../components/UserMenu';
 import QueryProvider from '../../providers/QueryProvider';
 import DashboardLoader from './loading';
+import useSignOutHandler from '../../hooks/useSignOutHandler';
 
 const Dashboard = ({ children }) => {
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    const handleSignOut = useSignOutHandler()
 
     const navItems = [
         { name: 'Dashboard', href: '/dashboard' },
@@ -74,7 +77,7 @@ const Dashboard = ({ children }) => {
                 {/* Logout Section */}
                 <div className="p-4 border-t border-slate-100">
                     <button
-                        onClick={() => signOut()}
+                        onClick={handleSignOut}
                         className={`flex items-center w-full px-4 py-3.5 text-sm font-bold text-rose-500 rounded-2xl hover:bg-rose-50 transition-all cursor-pointer ${!isSidebarOpen && 'justify-center'}`}
                     >
                         <FaSignOutAlt className="text-lg" />

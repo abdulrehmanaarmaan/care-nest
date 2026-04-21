@@ -13,6 +13,7 @@ const PaymentSuccess = () => {
     useEffect(() => {
         if (bookingId) {
             localStorage.removeItem('pendingBookingId');
+            localStorage.removeItem('formData')
         }
     }, [bookingId]);
 

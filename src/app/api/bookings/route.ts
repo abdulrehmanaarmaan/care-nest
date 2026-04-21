@@ -10,7 +10,7 @@ export async function POST(req) {
 
     const { insertedId } = result
 
-    const invoiceHtml = orderInvoice({ orderId: insertedId.toString(), ...booking });
+    // const invoiceHtml = orderInvoice({ orderId: insertedId.toString(), ...booking });
 
     const { customer, pricing } = booking
 
@@ -18,14 +18,14 @@ export async function POST(req) {
         return Response.json({ success: false, message: "Missing email" });
     }
 
-    await sendEmail({
-        to: customer?.email,
-        subject: `Order Confirmation - ${insertedId}`,
-        html: invoiceHtml,
-        text: `Your order ${insertedId} has been confirmed. Total: $${pricing?.total_amount}.`,
-    });
+    // await sendEmail({
+    // to: customer?.email,
+    // subject: `Order Confirmation - ${insertedId}`,
+    // html: invoiceHtml,
+    // text: `Your order ${insertedId} has been confirmed. Total: $${pricing?.total_amount}.`,
+    // });
 
-    return Response.json({ success: true, bookingId: insertedId.toString() })
+    return Response.json({ success: true, bookingId: insertedId })
 }
 
 export async function GET(req) {
