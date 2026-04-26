@@ -15,12 +15,6 @@ export default function RootLayout({ children }) {
             <body>
                 <NextAuthProvider>
                     {children}
-                    {/* <Suspense fallback={null}> */}
-                    {/* <AuthHandler /> */}
-                    {/* </Suspense> */}
-                    {/* <Suspense fallback={null}> */}
-                    {/* <AuthAlert />  ✅ mounted on every route */}
-                    {/* </Suspense> */}
                 </NextAuthProvider>
             </body>
         </html>

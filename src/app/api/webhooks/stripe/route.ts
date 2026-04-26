@@ -6,7 +6,6 @@ import { ObjectId } from "mongodb";
 import { sendEmail } from "../../../../lib/sendEmail";
 import { orderInvoice } from "../../../../lib/orderInvoice";
 
-
 export async function POST(req: Request) {
     const body = await req.text();
     const signature = (await headers()).get("stripe-signature");

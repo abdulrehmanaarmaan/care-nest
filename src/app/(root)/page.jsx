@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { FaQuoteLeft, FaCheckCircle, FaArrowRight } from 'react-icons/fa';
 import LoadingSkeleton from '../components/LoadingSkeleton';
+import useScrollHandler from '../../hooks/useScrollHandler';
+// import useScrollHandler from '@/hooks/useScrollHandler';
 
 export default function Home() {
 
@@ -27,10 +29,14 @@ export default function Home() {
   // return <Loader />
   // }
 
+  // const scroll = useScrollHandler('services')
+
+  const scrollToServices = useScrollHandler("services")
+
   return (
     <div className="w-full font-sans antialiased text-slate-900 bg-white">
       {/* ================= HERO SECTION ================= */}
-      <header className="relative pt-16 pb-24 lg:pt-32 lg:pb-40 overflow-hidden">
+      <section className="relative pt-16 pb-24 lg:pt-32 lg:pb-40 overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 items-center gap-12 lg:gap-16">
           <div className="relative z-10">
             <div className="inline-flex items-center gap-2 bg-teal-50 border border-teal-100 text-teal-700 px-4 py-2 rounded-full text-sm font-bold mb-8 shadow-sm">
@@ -45,7 +51,9 @@ export default function Home() {
               Care Nest connects families with trusted caregivers for babies, seniors, and recovery — ensuring safety and peace of mind.
             </p>
             <div className="flex flex-wrap gap-5">
-              <button className="bg-teal-600 text-white font-bold px-10 py-4 rounded-2xl shadow-lg shadow-teal-600/30 hover:bg-teal-700 hover:-translate-y-1 transition-all duration-300">
+              <button className="bg-teal-600 text-white font-bold px-10 py-4 rounded-2xl shadow-lg shadow-teal-600/30 hover:bg-teal-700 hover:-translate-y-1 transition-all duration-300 cursor-pointer" onClick={() => {
+                scrollToServices()
+              }}>
                 Explore Services
               </button>
               <button className="bg-white text-slate-700 border border-slate-200 font-bold px-10 py-4 rounded-2xl hover:bg-slate-50 hover:border-slate-300 transition-all duration-300">
@@ -66,7 +74,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </header>
+      </section>
       <main>
         {/* ================= ABOUT SECTION ================= */}
         <section className="py-24 bg-slate-50 border-y border-slate-100">
@@ -81,7 +89,7 @@ export default function Home() {
           </div>
         </section>
         {/* ================= SERVICES SECTION ================= */}
-        <section className="py-28 bg-white">
+        <section className="py-28 bg-white" id="services">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-20">
               <h2 className="text-4xl lg:text-5xl font-extrabold text-slate-900">Comprehensive Services</h2>
