@@ -40,18 +40,18 @@ const Booking = () => {
 
     const { isClicked, click } = useCrudState()
 
-    const { name, email } = data?.user || {}
+    const { name, email, ...rest } = data?.user || {}
 
     const [existingBookingId, setExistingBookingId] = useState("")
 
     const { data: existingBooking } = useQuery({
-        queryKey: ['existingBooking', existingBookingId, email, name, id],
+        queryKey: ['existingBooking', existingBookingId, id],
         queryFn: async () => {
-            if (!existingBookingId || !email || !name || !service_name) return null;
-            const result = await fetch(`/api/bookings/${existingBookingId}?email=${email}&name=${name}&service_id=${id}`)
+            if (!existingBookingId || !id) return null;
+            const result = await fetch(`/api/bookings/${existingBookingId}?service_id=${id}`)
             return result.json()
         },
-        enabled: !!existingBookingId && !!email && !!name && !!id
+        enabled: !!existingBookingId && !!id
     })
 
     console.log(existingBooking)
@@ -137,6 +137,7 @@ const Booking = () => {
                 service_id: id,
                 service_name,
                 customer: {
+                    id: data?.user?.id,
                     name,
                     email
                 },

@@ -8,7 +8,7 @@ const AuthButton = () => {
 
     const currentPath = usePathname()
 
-    const router = useRouter()
+    // const router = useRouter()
 
     const params = useSearchParams()
 

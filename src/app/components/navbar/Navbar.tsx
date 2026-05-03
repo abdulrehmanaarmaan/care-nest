@@ -5,6 +5,7 @@ import NavLink from './NavLink';
 import Link from 'next/link';
 import { signOut, useSession } from 'next-auth/react';
 import useSignOutHandler from '../../../hooks/useSignOutHandler';
+import Image from 'next/image';
 
 
 const Navbar = () => {
@@ -12,6 +13,7 @@ const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
 
     const { status, data } = useSession()
+    const { image } = data?.user || {}
 
     const handleSignOut = useSignOutHandler()
 
@@ -45,9 +47,9 @@ const Navbar = () => {
                     ) : status === 'authenticated' ? (
                         <div className="flex items-center gap-4">
                             <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-full border border-slate-100">
-                                {data ? (
-                                    <img
-                                        src={data?.user?.image}
+                                {image ? (
+                                    <Image
+                                        src={image}
                                         alt="User"
                                         width={24}
                                         height={24}

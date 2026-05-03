@@ -5,7 +5,7 @@ export async function POST(req: Request) {
         const { messages } = await req.json();
 
         const systemPrompt = `
-        You are an AI assistant for Care Nest, a caregiving platform.
+You are an AI assistant for Care Nest, a caregiving platform.
 
 AVAILABLE SERVICES:
 - baby_care
@@ -16,24 +16,25 @@ AVAILABLE SERVICES:
 - disability_care
 
 YOUR BEHAVIOR:
-- Be warm, human-like, and empathetic
-- Understand the user's intent before suggesting anything
-- If user is just chatting → respond naturally (no service)
-- If user clearly needs care → recommend ONE best service
-- Ask follow-up questions if unsure
+- Be natural, empathetic, and helpful
+- Understand the user's intent
+- Only recommend a service if confident
+- If unsure → ask follow-up questions
 
-IMPORTANT:
-- DO NOT recommend a service unless you are confident
-- DO NOT force suggestions
-- DO NOT sound robotic
+YOU MUST RETURN VALID JSON ONLY.
+Your entire response must be a JSON object.
 
-YOU MUST RETURN JSON ONLY:
-
+FORMAT:
 {
-  "reply": "...",
-  "service": "senior_care",
-  "confidence": 0.92
+  "reply": "natural human-like response",
+  "service": "baby_care | senior_care | memory_care | patient_care | recovery_care | disability_care | null",
+  "confidence": number (0 to 1)
 }
+
+RULES:
+- confidence > 0.8 → very sure
+- 0.5–0.8 → somewhat sure
+- < 0.5 → unsure → service should be null
 `;
 
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -44,7 +45,7 @@ YOU MUST RETURN JSON ONLY:
             },
             body: JSON.stringify({
                 model: "openai/gpt-4o-mini",
-                response_format: { type: "json_object" }, // ✅ IMPORTANT
+                response_format: { type: "json_object" },
                 messages: [
                     {
                         role: "system",
@@ -55,35 +56,46 @@ YOU MUST RETURN JSON ONLY:
             }),
         });
 
+        // ✅ Handle HTTP errors
+        if (!response.ok) {
+            console.error("HTTP Error:", response.status);
+            return NextResponse.json(
+                { reply: "AI service unavailable", actions: [] },
+                { status: 500 }
+            );
+        }
 
         const data = await response.json();
 
-
         console.log("OPENROUTER FULL RESPONSE:", JSON.stringify(data, null, 2));
 
-        let reply = "No response from AI";
-        let service = null;
+        // ✅ SAFE DEFAULTS
+        let reply = "I'm here to help. Could you please tell me more about your situation?";
+        let service: string | null = null;
+        let confidence = 0;
+
+        // ✅ PARSE AI RESPONSE SAFELY
         if (data?.choices?.length > 0) {
             const content = data.choices[0]?.message?.content;
+
             try {
                 const parsed = JSON.parse(content);
-                reply = parsed.reply;
-                service = parsed.service;
+                reply = parsed.reply || reply;
+                service = parsed.service || null;
+                confidence = Number(parsed.confidence) || 0;
             } catch (e) {
                 console.error("JSON parse error:", content);
-                reply = "AI response error.";
             }
-        }
-        else if (data?.error) {
+        } else if (data?.error) {
             console.error("OpenRouter ERROR:", data.error);
-            reply = "AI service error. Check console.";
+            return NextResponse.json(
+                { reply: "AI service error. Please try again.", actions: [] },
+                { status: 500 }
+            );
         }
 
-        if (!reply || reply.trim() === "") {
-            reply = "AI returned empty response.";
-        }
-
-        const serviceMap = {
+        // ✅ SERVICE ROUTES
+        const serviceMap: Record<string, string> = {
             baby_care: "/service/69c62586eed0b6179dd22ca7",
             senior_care: "/service/69c62586eed0b6179dd22ca8",
             patient_care: "/service/69c62586eed0b6179dd22ca9",
@@ -92,26 +104,31 @@ YOU MUST RETURN JSON ONLY:
             disability_care: "/service/69c62586eed0b6179dd22cac",
         };
 
-        let actions = [];
+        // ✅ SMART ACTIONS (NO FORCED BUTTONS)
+        let actions: { label: string; route: string }[] = [];
 
-        if (service && serviceMap[service]) {
+        if (
+            service &&
+            serviceMap[service] &&
+            confidence >= 0.7
+        ) {
             actions.push({
                 label: "Book Now",
                 route: serviceMap[service]
             });
         }
 
+        // ✅ FINAL RESPONSE
         return NextResponse.json({
             reply,
             actions
         });
 
     } catch (error) {
-        console.error("OpenRouter Error:", error);
-
+        console.error("Server Error:", error);
 
         return NextResponse.json(
-            { reply: "Something went wrong" },
+            { reply: "Something went wrong. Please try again.", actions: [] },
             { status: 500 }
         );
     }

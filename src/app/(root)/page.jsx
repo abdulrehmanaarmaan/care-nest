@@ -51,9 +51,8 @@ export default function Home() {
               Care Nest connects families with trusted caregivers for babies, seniors, and recovery — ensuring safety and peace of mind.
             </p>
             <div className="flex flex-wrap gap-5">
-              <button className="bg-teal-600 text-white font-bold px-10 py-4 rounded-2xl shadow-lg shadow-teal-600/30 hover:bg-teal-700 hover:-translate-y-1 transition-all duration-300 cursor-pointer" onClick={() => {
-                scrollToServices()
-              }}>
+              <button className="bg-teal-600 text-white font-bold px-10 py-4 rounded-2xl shadow-lg shadow-teal-600/30 hover:bg-teal-700 hover:-translate-y-1 transition-all duration-300 cursor-pointer" onClick={() => scrollToServices()
+              }>
                 Explore Services
               </button>
               <button className="bg-white text-slate-700 border border-slate-200 font-bold px-10 py-4 rounded-2xl hover:bg-slate-50 hover:border-slate-300 transition-all duration-300">

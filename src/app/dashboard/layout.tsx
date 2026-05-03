@@ -110,11 +110,9 @@ const Dashboard = ({ children }) => {
                 {/* Content */}
                 <main className="flex-1 overflow-y-auto p-4 md:p-10">
                     <div className="max-w-6xl mx-auto">
-                        <QueryProvider>
-                            <Suspense fallback={<DashboardLoader />}>
-                                {children}
-                            </Suspense>
-                        </QueryProvider>
+                        <Suspense fallback={<DashboardLoader />}>
+                            {children}
+                        </Suspense>
                     </div>
                 </main>
             </div>

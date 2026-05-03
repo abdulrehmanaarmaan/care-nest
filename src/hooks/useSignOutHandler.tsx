@@ -8,6 +8,11 @@ const useSignOutHandler = () => {
             .then(() => {
                 localStorage.removeItem('userData')
                 localStorage.removeItem('formData')
+
+                localStorage.removeItem('applicationData')
+                localStorage.removeItem('uploadedDocument')
+                localStorage.removeItem('uploadedDocumentType')
+                localStorage.removeItem('uploadedDocumentName')
             })
     }
 

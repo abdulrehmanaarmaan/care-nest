@@ -49,9 +49,9 @@ const Registration = () => {
 
         if (serverResponse?.success) {
 
-            const { contact, ...credentials } = user;
+            // const { contact, ...credentials } = user;
 
-            const authResponse: any = await signIn("credentials", { ...credentials, redirect: false })
+            const authResponse: any = await signIn("credentials", { ...user, redirect: false })
 
             if (authResponse?.error) {
 
@@ -132,7 +132,9 @@ const Registration = () => {
                         <div className="space-y-2">
                             <label className="text-sm font-bold text-slate-700 ml-1">Contact Number</label>
                             <input
-                                type="text"
+                                type="tel"
+                                inputMode="tel"
+                                pattern="[0-9+ ]*"
                                 placeholder="+880 1XXX-XXXXXX"
                                 className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 focus:bg-white outline-none transition-all duration-300 placeholder:text-slate-400"
                                 {...register('contact', { required: true })}

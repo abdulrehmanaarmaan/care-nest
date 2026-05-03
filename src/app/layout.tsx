@@ -1,6 +1,7 @@
 import React from 'react';
 import NextAuthProvider from '../providers/NextAuthProvider';
 import './globals.css'
+import QueryProvider from '../providers/QueryProvider';
 
 export const metadata = {
     title: 'Care Nest',
@@ -13,11 +14,13 @@ export default function RootLayout({ children }) {
     return (
         <html lang="en">
             <body>
-                <NextAuthProvider>
-                    {children}
-                </NextAuthProvider>
+                <QueryProvider>
+                    <NextAuthProvider>
+                        {children}
+                    </NextAuthProvider>
+                </QueryProvider>
             </body>
-        </html>
+        </html >
     );
 };
 

@@ -3,7 +3,7 @@ import { collections, dbConnect } from "../../lib/dbConnect"
 import bcrypt from 'bcryptjs'
 
 export const signUp = async payload => {
-    const { name, email, password, } = payload
+    const { name, email, contact, password, } = payload
 
     if (!email || !password) {
         return { success: false }
@@ -11,7 +11,7 @@ export const signUp = async payload => {
 
     const hashedPassword = await bcrypt.hash(password, 12)
 
-    const query = { name: name, email: email, provider: 'credentials' }
+    const query = { name, email, provider: 'credentials' }
 
     const existingUser = await dbConnect(collections?.users).findOne(query)
 
@@ -20,10 +20,12 @@ export const signUp = async payload => {
     }
 
     const newUser = {
-        name: name,
-        email: email,
+        name,
+        email,
+        contact,
         password: hashedPassword,
-        provider: 'credentials'
+        provider: 'credentials',
+        role: 'user'
     }
 
     const result = await dbConnect(collections?.users).insertOne(newUser)

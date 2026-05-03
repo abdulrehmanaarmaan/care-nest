@@ -21,6 +21,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     id: user._id.toString(), // MUST convert Mongo ObjectId
                     name: user.name,
                     email: user.email,
+                    provider: user.provider
                 }
             },
         }),
@@ -33,6 +34,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     callbacks: {
         async jwt({ token, user }) {
             if (user) {
+                token.id = user.id
                 token.email = user.email
             }
             return token
@@ -40,6 +42,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         async session({ session, token }) {
             if (session.user) {
+                session.user.id = token.id
                 session.user.email = token.email
             }
             return session
@@ -66,14 +69,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             const newUser = {
                 name,
                 email,
+                contact: '',
                 // password: await bcrypt.hash(toString, 12),
                 image,
-                provider: provider
+                provider,
+                role: 'user'
             }
 
             const result = await dbConnect(collections?.users).insertOne(newUser)
 
-            return result?.insertedId
+            user.id = result.insertedId.toString()
+            return true
         },
     },
 })

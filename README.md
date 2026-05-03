@@ -43,3 +43,5 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 4. Need to save to local storage based on service_name.
 5. Need to change public url in .env
 6. Need to add loaders for different routes
+7. Can't remove localStorage after successful application.
+8. Have to fix issue between Google and Credential double data.

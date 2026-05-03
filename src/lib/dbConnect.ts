@@ -7,7 +7,8 @@ export const collections = {
     services: 'services',
     bookings: 'bookings',
     warehouses: 'warehouses',
-    reviews: 'reviews'
+    reviews: 'reviews',
+    applications: 'applications'
 }
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version

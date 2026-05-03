@@ -74,8 +74,6 @@ const AiAssistant = () => {
 
     const router = useRouter()
 
-    // const scrollToServices = useScrollHandler("services")
-
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center px-4 py-8 md:p-12">
             <div className="w-full max-w-4xl bg-white rounded-[2rem] shadow-2xl shadow-teal-900/5 flex flex-col h-[85vh] border border-gray-100 overflow-hidden">

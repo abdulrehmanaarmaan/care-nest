@@ -28,11 +28,9 @@ export default function RootLayout({ children }) {
       </header>
 
       <main className="bg-slate-50">
-        <QueryProvider>
-          <Suspense fallback={<Loader />}>
-            {children}
-          </Suspense>
-        </QueryProvider>
+        <Suspense fallback={<Loader />}>
+          {children}
+        </Suspense>
       </main>
 
       <Footer />
