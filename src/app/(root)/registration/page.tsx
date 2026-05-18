@@ -3,7 +3,7 @@ import React from 'react';
 import Swal from 'sweetalert2';
 import { signIn, useSession } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
-import { signUp } from '../../../server/actions/auth';
+import { signUp } from '../../server/actions/auth';
 import AuthButton from '../../components/auth/AuthButton';
 import usePasswordState from '../../../hooks/usePasswordState';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';

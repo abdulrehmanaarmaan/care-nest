@@ -27,6 +27,8 @@ export async function POST(req: Request) {
         return new Response("Webhook Error", { status: 400 });
     }
 
+    console.log(event.type)
+
     // Handle successful payment
     if (event.type === "checkout.session.completed") {
         console.log("✅ Payment success webhook triggered");

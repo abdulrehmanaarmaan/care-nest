@@ -13,6 +13,7 @@ const useSignOutHandler = () => {
                 localStorage.removeItem('uploadedDocument')
                 localStorage.removeItem('uploadedDocumentType')
                 localStorage.removeItem('uploadedDocumentName')
+                // localStorage.removeItem('profileData')
             })
     }
 

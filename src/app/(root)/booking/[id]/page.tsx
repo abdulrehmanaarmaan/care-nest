@@ -1,14 +1,15 @@
 'use client'
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import useServiceInfo from '../../../../hooks/useServiceInfo';
 import { FaArrowLeft, FaArrowRight, FaCalendarAlt, FaShieldAlt } from 'react-icons/fa';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, usePathname, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
 import Swal from 'sweetalert2';
 import Loader from '../../loading';
 import useCrudState from '../../../../hooks/useCrudState';
+import useUnsavedChangesHandler from '../../../../hooks/useUnsavedChangesWarning';
 
 const Booking = () => {
 
@@ -24,13 +25,16 @@ const Booking = () => {
         }
     })
 
-    const [region, setRegion] = useState('')
+    const selectedRegion = useRef(false)
 
-    const { register, watch, handleSubmit, setValue, reset } = useForm()
+    const [region, setRegion] = useState(null)
+
+    const { register, watch, handleSubmit, setValue, reset, formState: { isDirty, isSubmitting } } = useForm()
 
     const watchedQuantity = watch('quantity', 1)
 
     const { data } = useSession()
+    const userId = data?.user?.id || ''// const  = data.user || {}
 
     console.log(data)
 
@@ -40,9 +44,17 @@ const Booking = () => {
 
     const { isClicked, click } = useCrudState()
 
-    const { name, email, ...rest } = data?.user || {}
+    const { name, email } = data?.user || {}
 
-    const [existingBookingId, setExistingBookingId] = useState("")
+    const [existingBookingId, setExistingBookingId] = useState(null)
+
+    const isBooking = useRef(false)
+
+    const hasUnsavedChanges = !isBooking.current && (isDirty || selectedRegion.current)
+
+    const pathname = usePathname()
+
+    useUnsavedChangesHandler({ hasUnsavedChanges, pathname })
 
     const { data: existingBooking } = useQuery({
         queryKey: ['existingBooking', existingBookingId, id],
@@ -129,7 +141,8 @@ const Booking = () => {
     const selectedDistricts = selectedWarehouses.map(warehouse => warehouse?.district)
 
     const bookService = async data => {
-        click(true)
+        isBooking.current = true
+        // click(true)
         try {
             const { district, detailed_address } = data
 
@@ -137,7 +150,7 @@ const Booking = () => {
                 service_id: id,
                 service_name,
                 customer: {
-                    id: data?.user?.id,
+                    id: userId,
                     name,
                     email
                 },
@@ -163,9 +176,9 @@ const Booking = () => {
                     text: 'Select your division and district',
                     icon: "info"
                 })
-                    .then(() => {
-                        click(false)
-                    })
+                // .then(() => {
+                // click(false)
+                // })
             }
 
             else {
@@ -194,6 +207,7 @@ const Booking = () => {
                     if (result?.success) {
                         localStorage.setItem('pendingBookingId', result?.bookingId)
                     }
+                    console.log(result)
                 }
 
                 const res = await fetch("/api/create-checkout-session", {
@@ -210,7 +224,7 @@ const Booking = () => {
                 });
                 const paymentResponse = await res.json();
                 window.location.href = paymentResponse.url;
-                click(false)
+                // click(false)
             }
         }
         catch {
@@ -219,9 +233,9 @@ const Booking = () => {
                 text: 'Failed to book',
                 icon: "error"
             })
-                .then(() => {
-                    click(false)
-                })
+            // .then(() => {
+            // click(false)
+            // })
         }
     }
 
@@ -294,6 +308,7 @@ const Booking = () => {
                                     <label className="block text-sm font-bold text-slate-700 ml-1">Division</label>
                                     <select required value={region || 'Select Division'} onChange={(e) => {
                                         setRegion(e.target.value)
+                                        selectedRegion.current = true
                                         setValue('district', 'Select District')
                                     }} className="w-full border-2 border-slate-100 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 outline-none bg-white font-medium text-slate-700 appearance-none cursor-pointer">
                                         <option disabled>Select Division</option>
@@ -357,7 +372,7 @@ const Booking = () => {
                                     ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
                                     : 'bg-teal-600 text-white hover:bg-teal-700 active:scale-[0.98] shadow-xl shadow-teal-600/20 cursor-pointer group'}`}
                             >
-                                {isClicked ? (
+                                {isSubmitting ? (
                                     <>
                                         <span className="w-5 h-5 border-3 border-slate-300 border-t-slate-500 rounded-full animate-spin"></span>
                                         <span>Securing your spot...</span>

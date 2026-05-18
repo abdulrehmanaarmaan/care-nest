@@ -3,8 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { FaQuoteLeft, FaCheckCircle, FaArrowRight } from 'react-icons/fa';
 import LoadingSkeleton from '../components/LoadingSkeleton';
-import useScrollHandler from '../../hooks/useScrollHandler';
-// import useScrollHandler from '@/hooks/useScrollHandler';
 
 export default function Home() {
 
@@ -30,8 +28,32 @@ export default function Home() {
   // }
 
   // const scroll = useScrollHandler('services')
+  // const isScrolling = useRef(false)
 
-  const scrollToServices = useScrollHandler("services")
+  const scrollToServices = e => {
+    e.preventDefault();
+    const el = document.getElementById('services');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+      // remove hash after scrolling
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }
+
+  // useEffect(() => {
+  // if (window.location.hash) {
+  // const timeout = setTimeout(() => {
+  // window.history.replaceState(
+  // null,
+  // '',
+  // window.location.pathname
+  // );
+  // }, 1000);
+  // return () => clearTimeout(timeout);
+  // }
+  // }, []);
+
+  // useScrollHandler({ isScrolling, id: "#services" })
 
   return (
     <div className="w-full font-sans antialiased text-slate-900 bg-white">
@@ -51,10 +73,11 @@ export default function Home() {
               Care Nest connects families with trusted caregivers for babies, seniors, and recovery — ensuring safety and peace of mind.
             </p>
             <div className="flex flex-wrap gap-5">
-              <button className="bg-teal-600 text-white font-bold px-10 py-4 rounded-2xl shadow-lg shadow-teal-600/30 hover:bg-teal-700 hover:-translate-y-1 transition-all duration-300 cursor-pointer" onClick={() => scrollToServices()
-              }>
+              <Link
+                onClick={(e) => scrollToServices(e)}
+                href='#services' className="bg-teal-600 text-white font-bold px-10 py-4 rounded-2xl shadow-lg shadow-teal-600/30 hover:bg-teal-700 hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                 Explore Services
-              </button>
+              </Link>
               <button className="bg-white text-slate-700 border border-slate-200 font-bold px-10 py-4 rounded-2xl hover:bg-slate-50 hover:border-slate-300 transition-all duration-300">
                 Meet Caregivers
               </button>

@@ -6,18 +6,20 @@ import Link from 'next/link';
 import { signOut, useSession } from 'next-auth/react';
 import useSignOutHandler from '../../../hooks/useSignOutHandler';
 import Image from 'next/image';
+import useUserData from '../../../hooks/useUserData';
 
 
 const Navbar = () => {
 
     const [isOpen, setIsOpen] = useState(false);
 
-    const { status, data } = useSession()
-    const { image } = data?.user || {}
+    const { status } = useSession()
+
+    const user = useUserData()
+
+    const { name, profile_image } = user || {}
 
     const handleSignOut = useSignOutHandler()
-
-    console.log(data)
 
     const navLinks =
         <>
@@ -47,9 +49,9 @@ const Navbar = () => {
                     ) : status === 'authenticated' ? (
                         <div className="flex items-center gap-4">
                             <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-full border border-slate-100">
-                                {image ? (
+                                {profile_image ? (
                                     <Image
-                                        src={image}
+                                        src={profile_image}
                                         alt="User"
                                         width={24}
                                         height={24}
@@ -58,7 +60,7 @@ const Navbar = () => {
                                 ) : (
                                     <User size={18} className="text-slate-500" />
                                 )}
-                                <span className="text-xs font-bold text-slate-700">{data?.user?.name?.split(' ')[0]}</span>
+                                <span className="text-xs font-bold text-slate-700">{name?.split(' ')[0]}</span>
                             </div>
                             <button
                                 onClick={handleSignOut}

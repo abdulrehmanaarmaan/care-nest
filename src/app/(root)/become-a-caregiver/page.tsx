@@ -7,6 +7,9 @@ import { usePathname, useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import Swal from 'sweetalert2';
+import useUserData from '../../../hooks/useUserData';
+import usePersistanceHandler from '../../../hooks/useUnsavedChangesWarning';
+import useUnsavedChangesHandler from '../../../hooks/useUnsavedChangesWarning';
 
 const ApplyCaregiver = () => {
 
@@ -18,22 +21,14 @@ const ApplyCaregiver = () => {
     }
   })
 
-  const { data: user } = useQuery({
-    queryKey: ['user'],
-    queryFn: async () => {
-      const res = await fetch('/api/me')
-      return res.json()
-    }
-  })
-
-  console.log(user)
+  const user = useUserData()
 
   const { exists, application_status } = existingApplication
 
   const {
     handleSubmit,
     register,
-    formState: { isSubmitting },
+    formState: { isSubmitting, isDirty },
     watch,
     reset
   } = useForm()
@@ -77,7 +72,7 @@ const ApplyCaregiver = () => {
   }, [isHydrated, status, rest])
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (status === 'unauthenticated') return;
 
     const saved = localStorage.getItem('applicationData')
 
@@ -87,32 +82,31 @@ const ApplyCaregiver = () => {
     }
 
     setIsHydrated(true)
-  }, [reset])
+  }, [reset, status])
 
   // ================================
   // 🔹 FILE (IMAGE) STATE
   // ================================
   const [uploadedUrl, setUploadedUrl] = useState(null)
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
+  // useEffect(() => {
+  // if (typeof window === 'undefined') return;
+  // const savedUrl = localStorage.getItem("uploadedDocument")
+  // if (savedUrl) {
+  // const parsedUrl = JSON.parse(savedUrl)
+  // setUploadedUrl(savedUrl)
+  // reset({ documentUrl: parsedUrl })
+  // }
+  // }, [reset, status])
 
+  const [fileName, setFileName] = useState("document.jpg")
+
+  useEffect(() => {
+    if (status === 'unauthenticated') return;
     const savedUrl = localStorage.getItem("uploadedDocument")
-
-    if (savedUrl) {
-      // const parsedUrl = JSON.parse(savedUrl)
-      setUploadedUrl(savedUrl)
-      // reset({ documentUrl: parsedUrl })
-    }
-  }, [reset, status])
-
-  useEffect(() => {
-    // if (status === 'unauthenticated') return;
-    // const savedUrl = localStorage.getItem("uploadedDocument")
-    const savedName = localStorage.getItem("uploadedDocumentName")
-
-    // if (savedUrl) setUploadedUrl(savedUrl)
-    if (savedName) setFileName(savedName)
+    // const savedName = localStorage.getItem("uploadedDocumentName")
+    if (savedUrl) setUploadedUrl(savedUrl)
+    // if (savedName) setFileName(savedName)
   }, [status])
 
   // ================================
@@ -120,7 +114,6 @@ const ApplyCaregiver = () => {
   // ================================
 
   const fileInputRef = useRef(null)
-  const [fileName, setFileName] = useState("document.jpg")
 
   useEffect(() => {
     if (status === 'unauthenticated') return;
@@ -148,7 +141,13 @@ const ApplyCaregiver = () => {
     prePopulate()
   }, [uploadedUrl, fileName, status])
 
-  const currentPath = usePathname()
+  const pathname = usePathname()
+
+  const uploadedPerSession = useRef(false)
+
+  const hasUnsavedChanges = isDirty || uploadedPerSession.current
+
+  useUnsavedChangesHandler({ hasUnsavedChanges, pathname })
 
   const handleFileUpload = async e => {
 
@@ -169,13 +168,14 @@ const ApplyCaregiver = () => {
     const data = await res.json()
 
     if (res.ok && data.secure_url) {
+      uploadedPerSession.current = true
       setUploadedUrl(data.secure_url)
 
       if (status === 'unauthenticated') return;
 
       localStorage.setItem("uploadedDocument", data.secure_url)
       localStorage.setItem("uploadedDocumentType", file.type)
-      localStorage.setItem("uploadedDocumentName", file.name) // ✅ NEW
+      // localStorage.setItem("uploadedDocumentName", file.name) // ✅ NEW
     }
   }
 
@@ -193,10 +193,10 @@ const ApplyCaregiver = () => {
   // ================================
   const submitApplication = async (formData) => {
 
-    if (!uploadedUrl) {
-      alert("Please upload a document")
-      return
-    }
+    // if (!uploadedUrl) {
+    // alert("Please upload a document")
+    // return
+    // }
 
     const { name, email, phone, experience, specialization, description, agreedToTerms } = formData
 
@@ -236,7 +236,7 @@ const ApplyCaregiver = () => {
       // localStorage.removeItem('applicationData')
       localStorage.removeItem('uploadedDocument')
       localStorage.removeItem('uploadedDocumentType')
-      localStorage.removeItem('uploadedDocumentName')
+      // localStorage.removeItem('uploadedDocumentName')
 
       reset({
         name: '',
@@ -247,6 +247,8 @@ const ApplyCaregiver = () => {
         description: '',
         agreedToTerms: false
       })
+
+      uploadedPerSession.current = false
 
       setUploadedUrl(null)
       setFileName("")
@@ -366,14 +368,14 @@ const ApplyCaregiver = () => {
                 <div className="mt-5 flex flex-wrap gap-3">
                   <button
                     type="button"
-                    onClick={() => router.push(`/login?callbackUrl=${currentPath}`)}
+                    onClick={() => router.push(`/login?callbackUrl=${pathname}`)}
                     className="text-xs font-black px-6 py-2.5 bg-amber-600 text-white rounded-xl hover:bg-amber-700 transition-all shadow-lg shadow-amber-600/20 active:scale-95 cursor-pointer"
                   >
                     Sign In Now
                   </button>
                   <button
                     type="button"
-                    onClick={() => router.push(`/registration?callbackUrl=${currentPath}`)}
+                    onClick={() => router.push(`/registration?callbackUrl=${pathname}`)}
                     className="text-xs font-black px-6 py-2.5 border-2 border-amber-600 text-amber-600 rounded-xl hover:bg-amber-600 hover:text-white transition-all active:scale-95 cursor-pointer"
                   >
                     Create Account
@@ -400,6 +402,8 @@ const ApplyCaregiver = () => {
                 <input
                   {...register(field.name, { required: true })}
                   type={field.type}
+                  inputMode={field.name === 'phone' ? 'tel' : undefined}
+                  pattern={field.name === 'phone' ? "[0-9+ ]*" : undefined}
                   placeholder={field.placeholder}
                   disabled={
                     field.name === 'name' ? (user?.name && Boolean(watch('name'))) :
@@ -463,19 +467,37 @@ const ApplyCaregiver = () => {
             </div>
             {/* Uploaded Feedback with Next.js Image */}
             {uploadedUrl && (
-              <div className="mt-6 flex items-center gap-6 p-4 bg-emerald-50 rounded-3xl border border-emerald-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="relative h-24 w-24 rounded-2xl overflow-hidden border-4 border-white shadow-lg flex-shrink-0">
-                  <Image
-                    src={uploadedUrl}
-                    alt="Verification Document"
-                    fill
-                    className="object-cover"
-                  />
+              <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-emerald-50 rounded-3xl border border-emerald-100 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full">
+                <div className="flex items-center gap-4 sm:gap-6 text-center sm:text-left flex-col sm:flex-row w-full sm:w-auto">
+                  <div className="relative h-20 w-20 sm:h-24 sm:w-24 rounded-2xl overflow-hidden border-4 border-white shadow-lg flex-shrink-0 mx-auto sm:mx-0">
+                    <Image
+                      src={uploadedUrl}
+                      alt="Verification Document"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-sm font-black text-emerald-800">Document Verified</p>
+                    <p className="text-xs text-emerald-600 font-medium">Successfully uploaded and ready for review.</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-black text-emerald-800">Document Verified</p>
-                  <p className="text-xs text-emerald-600 font-medium">Successfully uploaded and ready for review.</p>
-                </div>
+
+                {/* Professional Interactive Clear Action Element */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                    setUploadedUrl(null)
+                    // Trigger your state setter here to clear uploadedUrl (e.g., setUploadedUrl(null))
+                  }}
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-rose-100 hover:bg-rose-50 text-rose-600 text-xs font-black uppercase tracking-wider transition-all duration-300 active:scale-[0.95] cursor-pointer shadow-sm hover:shadow-rose-100"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  <span>Remove</span>
+                </button>
               </div>
             )}
           </div>
@@ -496,10 +518,9 @@ const ApplyCaregiver = () => {
             <button
               type="submit"
               disabled={status !== 'authenticated' || isSubmitting}
-              className={`w-full text-white font-black py-5 rounded-[1.5rem] transition-all shadow-2xl flex items-center justify-center gap-3 transform active:scale-[0.98] tracking-widest uppercase text-sm
-      ${status === 'authenticated'
-                  ? 'bg-teal-600 hover:bg-teal-700 shadow-teal-600/30 cursor-pointer'
-                  : 'bg-slate-300 cursor-not-allowed shadow-none'
+              className={`w-full text-white font-black py-5 rounded-[1.5rem] transition-all shadow-2xl flex items-center justify-center gap-3 transform active:scale-[0.98] tracking-widest uppercase text-sm ${status === 'authenticated'
+                ? 'bg-teal-600 hover:bg-teal-700 shadow-teal-600/30 cursor-pointer'
+                : 'bg-slate-300 cursor-not-allowed shadow-none'
                 }`}
             >
               {isSubmitting ? (

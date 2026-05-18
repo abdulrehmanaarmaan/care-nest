@@ -23,3 +23,34 @@ export async function GET() {
 
     return Response.json(result)
 }
+
+export async function PATCH(req) {
+    const profile = await req.json()
+
+    const { updated_at, ...rest } = profile
+
+    const { user } = await auth()
+    const { id } = user || {}
+
+    const query = { _id: new ObjectId(id) }
+
+    const updatedProfile = {
+        $set: {
+            ...rest
+        }
+    }
+
+    console.log(updatedProfile)
+
+    const result = await dbConnect(collections?.users).updateOne(query, updatedProfile)
+
+    console.log(result)
+
+    if (!result.modifiedCount) {
+        return Response.json({ success: result?.modifiedCount })
+    }
+
+    const result2 = await dbConnect(collections?.users).updateOne(query, { $set: { ...rest, updated_at } })
+
+    return Response.json({ success: result2?.modifiedCount })
+}

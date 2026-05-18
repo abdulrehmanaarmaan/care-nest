@@ -16,6 +16,8 @@ export async function GET(req, { params }) {
 
     const result = await dbConnect(collections?.bookings).findOne(query)
 
+    console.log(result)
+
     return Response.json(result)
 }
 

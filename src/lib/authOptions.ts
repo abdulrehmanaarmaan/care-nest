@@ -1,6 +1,6 @@
 import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
-import { login } from "../server/actions/auth"
+import { login } from "../app/server/actions/auth"
 import GoogleProvider from "next-auth/providers/google";
 import { collections, dbConnect } from "./dbConnect";
 import bcrypt from 'bcryptjs'
@@ -69,11 +69,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             const newUser = {
                 name,
                 email,
-                contact: '',
-                // password: await bcrypt.hash(toString, 12),
-                image,
+                profile_image: image,
+                phone: '',
+                emergency_contact: '',
+                password: 'unaccessible',
+                date_of_birth: '',
+                gender: '',
+                address: '',
+                bio: '',
+                medical_notes: '',
+                is_verified: false,
                 provider,
-                role: 'user'
+                role: 'user',
+                created_at: new Date()
             }
 
             const result = await dbConnect(collections?.users).insertOne(newUser)

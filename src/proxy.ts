@@ -1,7 +1,7 @@
 import { getToken } from 'next-auth/jwt';
 import { NextResponse } from 'next/server';
 
-const privateRoutes = ['/booking', '/dashboard/my-bookings']
+const privateRoutes = ['/booking', '/dashboard']
 
 const authRoutes = ['/login', '/registration', '/forgot-password', '/reset-password']
 
@@ -34,5 +34,5 @@ export default async function proxy(req) {
 }
 
 export const config = {
-    matcher: ['/booking/:path*', '/dashboard/my-bookings/:path*', '/login', '/registration', '/forgot-password', '/reset-password'],
+    matcher: ['/booking/:path*', '/dashboard/:path*', '/login', '/registration', '/forgot-password', '/reset-password'],
 }

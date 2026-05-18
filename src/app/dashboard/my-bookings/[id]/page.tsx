@@ -2,8 +2,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import React from 'react';
 import { FaArrowLeft, FaCalendarCheck, FaClock, FaMapMarkerAlt, FaReceipt, FaUser } from 'react-icons/fa';
-import { getBooking } from '../../../server/actions/bookings';
+// import { getBooking } from '../../../server/actions/bookings';
 import { auth } from '../../../../lib/authOptions';
+import { getBooking } from '../../../server/actions/bookings';
 
 const BookingDetails = async ({ params }) => {
 

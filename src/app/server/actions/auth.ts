@@ -1,9 +1,9 @@
 'use server'
-import { collections, dbConnect } from "../../lib/dbConnect"
+import { collections, dbConnect } from "../../../lib/dbConnect"
 import bcrypt from 'bcryptjs'
 
 export const signUp = async payload => {
-    const { name, email, contact, password, } = payload
+    const { name, email, phone, password, } = payload
 
     if (!email || !password) {
         return { success: false }
@@ -22,10 +22,19 @@ export const signUp = async payload => {
     const newUser = {
         name,
         email,
-        contact,
+        profile_image: '',
         password: hashedPassword,
+        phone,
+        emergency_contact: '',
+        date_of_birth: '',
+        gender: '',
+        address: '',
+        bio: '',
+        medical_notes: '',
+        is_verified: false,
         provider: 'credentials',
-        role: 'user'
+        role: 'user',
+        created_at: new Date(),
     }
 
     const result = await dbConnect(collections?.users).insertOne(newUser)

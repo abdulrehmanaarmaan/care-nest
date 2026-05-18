@@ -1,7 +1,6 @@
 'use client'
 import { Bot, SendHorizontal, Sparkles, User } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
-import useScrollHandler from '../../../hooks/useScrollHandler';
 import { useRouter } from 'next/navigation';
 
 const AiAssistant = () => {

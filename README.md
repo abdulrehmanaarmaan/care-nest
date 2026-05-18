@@ -45,3 +45,5 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 6. Need to add loaders for different routes
 7. Can't remove localStorage after successful application.
 8. Have to fix issue between Google and Credential double data.
+9. Issue with image uploading.
+10. Need to ask whether can show a text instead of toast for {success: false}.
