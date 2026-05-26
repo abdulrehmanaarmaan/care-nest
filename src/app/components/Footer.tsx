@@ -36,9 +36,9 @@ const Footer = () => {
                         <h4 className="text-white font-bold mb-6 uppercase tracking-widest text-xs">Platform</h4>
                         <ul className="space-y-4 text-sm font-medium">
                             <li><Link href="/services">Our Services</Link></li>
-                            <li><Link href="/caretakers">Find Caretakers</Link></li>
+                            <li><Link href="/caregivers">Find Caretakers</Link></li>
                             <li><Link href="/about">About Our Mission</Link></li>
-                            <li><Link href="/careers">Join as a Caregiver</Link></li>
+                            <li><Link href="/become-a-caregiver">Join as a Caregiver</Link></li>
                         </ul>
                     </div>
                     {/* Column 3: Contact Info */}

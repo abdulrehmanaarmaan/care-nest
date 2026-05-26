@@ -2,7 +2,15 @@
 import { collections, dbConnect } from "../../../lib/dbConnect"
 import bcrypt from 'bcryptjs'
 
-export const signUp = async payload => {
+// type RegistrationField = "email" | "password" | "password" | "phone"
+
+interface RegistrationResult {
+    success: boolean,
+    field?: "email";
+    message?: string
+}
+
+export const signUp = async (payload): Promise<RegistrationResult> => {
     const { name, email, phone, password, } = payload
 
     if (!email || !password) {
@@ -16,7 +24,7 @@ export const signUp = async payload => {
     const existingUser = await dbConnect(collections?.users).findOne(query)
 
     if (existingUser) {
-        return { success: false }
+        return { success: false, field: "email", message: "Account already exists with this email" }
     }
 
     const newUser = {
@@ -34,6 +42,7 @@ export const signUp = async payload => {
         is_verified: false,
         provider: 'credentials',
         role: 'user',
+        account_status: 'active',
         created_at: new Date(),
     }
 
@@ -44,7 +53,16 @@ export const signUp = async payload => {
     }
 }
 
-export const login = async payload => {
+type LoginField = "email" | "password"
+
+interface LoginResult {
+    success: boolean;
+    field?: LoginField;
+    message?: string;
+    user?: any
+}
+
+export const login = async (payload): Promise<LoginResult> => {
     const { email, password } = payload
 
     const query = {
@@ -54,11 +72,34 @@ export const login = async payload => {
 
     const existingUser = await dbConnect(collections?.users).findOne(query)
 
+    if (!existingUser) {
+        return {
+            success: false,
+            field: "email",
+            message: "No account found with this email."
+        }
+    }
+
+    if (existingUser.account_status === "deactivated") {
+        return {
+            success: false,
+            field: "email",
+            message: "This account has been deactivated."
+        }
+    }
+
     const isMatched = await bcrypt.compare(password, existingUser?.password)
 
     if (!isMatched) {
-        return null
+        return {
+            success: false,
+            field: "password",
+            message: "Incorrect password."
+        }
     }
 
-    return existingUser
+    return {
+        success: true,
+        user: { ...existingUser, _id: existingUser._id.toString() }
+    }
 }

@@ -8,30 +8,30 @@
 ================================= */
 
 interface Pricing {
-    base_price: number;
-    quantity: number;
-    total_amount: number;
-    unit: string;
+  base_price: number;
+  quantity: number;
+  total_amount: number;
+  unit: string;
 }
 
 interface Customer {
-    name: string;
-    email: string;
+  name: string;
+  email: string;
 }
 
 interface Location {
-    division: string;
-    district: string;
-    detailed_address: string;
+  division: string;
+  district: string;
+  detailed_address: string;
 }
 
-interface Order {
-    orderId: string;
-    service_name: string;
-    pricing: Pricing;
-    booked_at?: Date | string;
-    customer: Customer;
-    location: Location;
+export interface Order {
+  _id: string;
+  service_name: string;
+  pricing: Pricing;
+  booked_at?: Date | string;
+  customer: Customer;
+  location: Location;
 }
 
 /* ================================
@@ -41,97 +41,97 @@ interface Order {
 /**
  * Sanitizes HTML to prevent XSS attacks.
  */
-const sanitizeHtml = (str: string | number | undefined | null): string => {
-    if (str === undefined || str === null) return "";
-    if (typeof str === "number") return str.toString();
+export const sanitizeHtml = (str: string | number | undefined | null): string => {
+  if (str === undefined || str === null) return "";
+  if (typeof str === "number") return str.toString();
 
-    return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#x27;")
-        .replace(/\//g, "&#x2F;");
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;")
+    .replace(/\//g, "&#x2F;");
 };
 
 /**
  * Formats currency in USD with 2 decimal places.
  */
-const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    }).format(amount);;
+export const formatCurrency = (amount: number): string => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);;
 };
 
 /**
  * Formats date and time.
  */
-const formatDateTime = (dateInput: Date | string) => {
+export const formatDateTime = (dateInput: Date | string) => {
 
-    const date =
-        typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+  const date =
+    typeof dateInput === "string" ? new Date(dateInput) : dateInput;
 
-    if (!date || isNaN(date.getTime())) {
-        throw new Error("Invalid date in orderInvoice");
-    }
+  if (!date || isNaN(date.getTime())) {
+    throw new Error("Invalid date in orderInvoice");
+  }
 
-    return {
-        formattedDate: date.toLocaleDateString("en-BD", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-        }),
-        formattedTime: date.toLocaleTimeString("en-BD", {
-            hour: "2-digit",
-            minute: "2-digit",
-        }),
-    };
+  return {
+    formattedDate: date.toLocaleDateString("en-BD", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }),
+    formattedTime: date.toLocaleTimeString("en-BD", {
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+  };
 };
 
 /* ================================
    Invoice Generator
 ================================= */
 
-export const orderInvoice = (order: Order): string => {
-    const {
-        orderId,
-        service_name,
-        pricing,
-        booked_at,
-        customer,
-        location,
-    } = order;
+export const bookingReceivedEmail = (order: Order): string => {
+  const {
+    _id,
+    service_name,
+    pricing,
+    booked_at,
+    customer,
+    location,
+  } = order;
 
-    // Environment Variables
-    const appUrl =
-        process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  // Environment Variables
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-    const logoUrl =
-        process.env.NEXT_PUBLIC_LOGO_URL ||
-        "https://res.cloudinary.com/dincextlz/image/upload/v1775977228/Screenshot_2026-03-15_115401_bzcw84.png";
+  const logoUrl =
+    process.env.NEXT_PUBLIC_LOGO_URL ||
+    "https://res.cloudinary.com/dincextlz/image/upload/v1775977228/Screenshot_2026-03-15_115401_bzcw84.png";
 
-    // Sanitize Inputs
-    const safeOrderId = sanitizeHtml(orderId);
-    const safeCustomerName = sanitizeHtml(customer?.name);
-    const safeCustomerEmail = sanitizeHtml(customer?.email);
-    const safeServiceName = sanitizeHtml(service_name);
-    const safeAddress = sanitizeHtml(location?.detailed_address);
+  // Sanitize Inputs
+  const safeOrderId = sanitizeHtml(_id);
+  const safeCustomerName = sanitizeHtml(customer?.name);
+  const safeCustomerEmail = sanitizeHtml(customer?.email);
+  const safeServiceName = sanitizeHtml(service_name);
+  const safeAddress = sanitizeHtml(location?.detailed_address);
 
-    // Format Date & Time
-    const { formattedDate, formattedTime } =
-        formatDateTime(booked_at);
+  // Format Date & Time
+  const { formattedDate, formattedTime } =
+    formatDateTime(booked_at);
 
-    return `
+  return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
-<title>Order Confirmation - Care Nest</title>
+<title>Payment Received - Booking Under Review | Care Nest</title>
 
 <!--[if mso]>
 <style type="text/css">
@@ -214,13 +214,13 @@ body, table, td {font-family: Arial, sans-serif !important;}
   .order-details-label {
     color: #6b7280;
     font-weight: 500;
-    margin-right: 1px;
   }
 
   .order-details-value {
     color: #111827;
     font-weight: 600;
     text-align: right;
+    margin-left: 2px; 
   }
 
   .products-table {
@@ -321,8 +321,8 @@ body, table, td {font-family: Arial, sans-serif !important;}
 <tr>
 <td class="header">
   <img src="${logoUrl}" alt="Care Nest Logo" />
-  <h1>Order Confirmed! 🎉</h1>
-  <p>Thank you for choosing Care Nest</p>
+  <h1>Payment Received ✓</h1>
+  <p>Your booking request has been submitted successfully</p>
 </td>
 </tr>
 
@@ -331,13 +331,17 @@ body, table, td {font-family: Arial, sans-serif !important;}
 <td class="content">
   <p class="greeting">Hi ${safeCustomerName},</p>
   <p class="message">
-    Great news! We've received your booking and it's being processed.
+    We've successfully received your payment.
+    
+    Your booking request is now under operational review by the Care Nest team.
+    
+    You’ll receive another email once your booking is approved or rejected.
   </p>
 
   <!-- Order Details -->
   <div class="order-details">
     <div class="order-details-row">
-      <span class="order-details-label mr-1">Order Number:</span>
+      <span class="order-details-label">Order Number:</span>
       <span class="order-details-value">#${safeOrderId}</span>
     </div>
     <div class="order-details-row">
@@ -345,11 +349,11 @@ body, table, td {font-family: Arial, sans-serif !important;}
       <span class="order-details-value">${formattedDate} at ${formattedTime}</span>
     </div>
     <div class="order-details-row">
-      <span class="order-details-label mr-1">Email:</span>
+      <span class="order-details-label">Email:</span>
       <span class="order-details-value">${safeCustomerEmail}</span>
     </div>
     <div class="order-details-row">
-      <span class="order-details-label mr-1">Service Address:</span>
+      <span class="order-details-label">Service Address:</span>
       <span class="order-details-value">${safeAddress}</span>
     </div>
   </div>
@@ -379,15 +383,29 @@ body, table, td {font-family: Arial, sans-serif !important;}
   <!-- Totals -->
   <div class="totals">
     <div class="totals-row total-final">
-      <span style="margin-right: 1px">Total:</span>
-      <span>${formatCurrency(pricing.total_amount)}</span>
+      <span>Total:</span>
+      <span style="margin-left: 2px">${formatCurrency(pricing.total_amount)}</span>
     </div>
+  </div>
+
+  <div
+    style="
+    margin-top:24px;
+    padding:16px;
+    background:#fffbeb;
+    border:1px solid #fde68a;
+    border-radius:8px;
+    ">
+      <p style="margin:0;color:#92400e;font-size:14px;">
+        Your payment does not automatically guarantee service approval.
+        Care Nest reviews availability and operational capacity before confirmation.
+      </p>
   </div>
 
   <!-- CTA -->
   <div class="cta-section">
-    <a href="${appUrl}/dashboard/my-bookings" class="cta-button">
-      Track Your Booking
+    <a href=${appUrl}/dashboard/my-bookings/${_id} class="cta-button">
+      View Booking Status
     </a>
   </div>
 

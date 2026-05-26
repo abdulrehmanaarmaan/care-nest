@@ -8,7 +8,6 @@ import { useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
 import Swal from 'sweetalert2';
 import Loader from '../../loading';
-import useCrudState from '../../../../hooks/useCrudState';
 import useUnsavedChangesHandler from '../../../../hooks/useUnsavedChangesWarning';
 
 const Booking = () => {
@@ -25,7 +24,7 @@ const Booking = () => {
         }
     })
 
-    const selectedRegion = useRef(false)
+    const isSelectedRegion = useRef(false)
 
     const [region, setRegion] = useState(null)
 
@@ -42,15 +41,13 @@ const Booking = () => {
 
     const [isDisabled, disable] = useState(false)
 
-    const { isClicked, click } = useCrudState()
-
     const { name, email } = data?.user || {}
 
     const [existingBookingId, setExistingBookingId] = useState(null)
 
-    const isBooking = useRef(false)
+    const [isBooking, setIsBooking] = useState(false)
 
-    const hasUnsavedChanges = !isBooking.current && (isDirty || selectedRegion.current)
+    const hasUnsavedChanges = !isBooking && (isDirty || isSelectedRegion.current)
 
     const pathname = usePathname()
 
@@ -141,8 +138,9 @@ const Booking = () => {
     const selectedDistricts = selectedWarehouses.map(warehouse => warehouse?.district)
 
     const bookService = async data => {
-        isBooking.current = true
-        // click(true)
+
+        setIsBooking(true)
+
         try {
             const { district, detailed_address } = data
 
@@ -165,7 +163,7 @@ const Booking = () => {
                     district: district,
                     detailed_address: detailed_address
                 },
-                status: 'Pending',
+                status: 'Pending Payment',
                 payment_status: 'Unpaid',
                 booked_at: new Date()
             }
@@ -176,9 +174,6 @@ const Booking = () => {
                     text: 'Select your division and district',
                     icon: "info"
                 })
-                // .then(() => {
-                // click(false)
-                // })
             }
 
             else {
@@ -224,7 +219,6 @@ const Booking = () => {
                 });
                 const paymentResponse = await res.json();
                 window.location.href = paymentResponse.url;
-                // click(false)
             }
         }
         catch {
@@ -233,9 +227,6 @@ const Booking = () => {
                 text: 'Failed to book',
                 icon: "error"
             })
-            // .then(() => {
-            // click(false)
-            // })
         }
     }
 
@@ -308,7 +299,7 @@ const Booking = () => {
                                     <label className="block text-sm font-bold text-slate-700 ml-1">Division</label>
                                     <select required value={region || 'Select Division'} onChange={(e) => {
                                         setRegion(e.target.value)
-                                        selectedRegion.current = true
+                                        isSelectedRegion.current = true
                                         setValue('district', 'Select District')
                                     }} className="w-full border-2 border-slate-100 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 outline-none bg-white font-medium text-slate-700 appearance-none cursor-pointer">
                                         <option disabled>Select Division</option>
@@ -366,9 +357,9 @@ const Booking = () => {
                             </div>
 
                             <button
-                                disabled={isClicked}
+                                disabled={isSubmitting}
                                 type='submit'
-                                className={`w-full py-5 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-3 ${isClicked
+                                className={`w-full py-5 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-3 ${isSubmitting
                                     ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
                                     : 'bg-teal-600 text-white hover:bg-teal-700 active:scale-[0.98] shadow-xl shadow-teal-600/20 cursor-pointer group'}`}
                             >
@@ -379,7 +370,7 @@ const Booking = () => {
                                     </>
                                 ) : (
                                     <>
-                                        <span>{existingBooking ? 'Pay Now' : 'Confirm Booking'}</span>
+                                        <span>{existingBooking && existingBookingId ? 'Pay Now' : 'Confirm Booking'}</span>
                                         <FaArrowRight className="group-hover:translate-x-1.5 transition-transform duration-300" />
                                     </>
                                 )}

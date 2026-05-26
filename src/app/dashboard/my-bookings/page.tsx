@@ -13,13 +13,13 @@ const MyBookings = () => {
 
     console.log(data)
 
-    const { email } = data?.user || {}
+    const { id } = data?.user || {}
 
     const { data: bookings = [], isLoading, refetch } = useQuery({
-        queryKey: ['bookings', email],
-        enabled: !!email,
+        queryKey: ['bookings', id],
+        enabled: !!id,
         queryFn: async () => {
-            const result = await fetch(`/api/bookings?email=${email}`)
+            const result = await fetch(`/api/bookings?user_id=${id}`)
             return result.json()
         }
     })

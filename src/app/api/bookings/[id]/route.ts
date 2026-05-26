@@ -1,6 +1,9 @@
 import { ObjectId } from "mongodb"
 import { collections, dbConnect } from "../../../../lib/dbConnect"
 import { auth } from "../../../../lib/authOptions"
+import { bookingApprovedEmail } from "../../../../lib/bookingApprovedEmail"
+import { sendEmail } from "../../../../lib/sendEmail"
+import { bookingRejectedEmail } from "../../../../lib/bookingRejectedEmail"
 
 export async function GET(req, { params }) {
 
@@ -21,14 +24,13 @@ export async function GET(req, { params }) {
     return Response.json(result)
 }
 
+interface UpdatedBooking {
+    $set?: any
+}
+
 export async function PATCH(req, { params }) {
 
-    let booking;
-    try {
-        booking = await req.json()
-    } catch (error) {
-        booking = null
-    }
+    const booking = await req.json()
 
     const { id } = await params
 
@@ -38,29 +40,88 @@ export async function PATCH(req, { params }) {
 
     const query = { _id: new ObjectId(id) }
 
+    let updatedBooking: UpdatedBooking = {};
+
+    const { user } = await auth()
+
+    const { searchParams } = await new URL(req.url)
+
+    const status = searchParams.get("status")
+
     if (booking) {
-        const updatedBooking = {
-            $set: { ...booking, updated_at: new Date().toISOString() }
+        updatedBooking.$set = { ...booking, updated_at: new Date().toISOString() }
+    }
+
+    else if (status === 'Approved') {
+        updatedBooking.$set = {
+            status,
+            approved_at: new Date().toISOString(),
+            approved_by: user?.id,
+            "workflow.allocation_status": "Assigned",
+            updated_at: new Date().toISOString()
         }
+    }
 
-        const result = await dbConnect(collections?.bookings).updateOne(query, updatedBooking)
+    else if (status === 'Rejected') {
+        updatedBooking.$set = {
+            status,
+            cancellation: {
+                reason: 'Rejected by admin',
+                cancelled_by: user?.id,
+                cancelled_at: new Date().toISOString()
+            },
+            updated_at: new Date().toISOString()
+        }
+    }
 
-        return Response.json({ success: result?.modifiedCount })
+    else if (status === 'Confirmed') {
+        updatedBooking.$set = {
+            status,
+            payment: {
+                confirmed_at: new Date().toISOString(),
+                confirmed_by: user?.id,
+                method: 'Manual'
+            },
+            updated_at: new Date()
+        }
     }
 
     else {
-        const cancelledBooking = {
-            $set: {
-                status: 'Cancelled',
-                payment_status: 'Failed',
-                updated_at: new Date().toISOString()
-            }
+        updatedBooking.$set = {
+            status: 'Cancelled',
+            payment_status: 'Failed',
+            updated_at: new Date().toISOString()
         }
-
-        const result = await dbConnect(collections?.bookings).updateOne(query, cancelledBooking)
-
-        console.log(result?.modifiedCount)
-
-        return Response.json({ success: result?.modifiedCount })
     }
+
+    const result = await dbConnect(collections?.bookings).updateOne(query, updatedBooking)
+
+    const existingBooking = await dbConnect(collections?.bookings).findOne(query)
+    const { email } = existingBooking?.customer
+
+    if (status === "Approved" && result?.modifiedCount) {
+        const approvedHtml = bookingApprovedEmail(existingBooking);
+
+        sendEmail({
+            to: email,
+            subject: `Booking Approved - ${id}`,
+            html: approvedHtml,
+            text: `Your booking ${id} has been approved. You can now track the booking from your dashboard.`,
+        });
+    }
+
+    if (status === "Rejected" && result?.modifiedCount) {
+
+        const rejectedHtml = bookingRejectedEmail(existingBooking);
+
+        sendEmail({
+            to: email,
+            subject: `Booking Not Approved - ${id}`,
+            html: rejectedHtml,
+            text: `Your booking ${id} could not be approved after review. Please check your dashboard for updates.`,
+        });
+    }
+
+    return Response.json({ success: result?.modifiedCount })
 }
+

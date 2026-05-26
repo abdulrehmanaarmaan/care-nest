@@ -14,14 +14,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             async authorize(credentials) {
                 if (!credentials) return null
 
-                const user = await login(credentials)
-                if (!user) return null
+                const result = await login(credentials)
 
+                if (!result?.success) return null;
+
+                const user = result.user
                 return {
-                    id: user._id.toString(), // MUST convert Mongo ObjectId
+                    id: user._id.toString(),
                     name: user.name,
                     email: user.email,
-                    provider: user.provider
+                    provider: user.provider,
+                    account_status: user.account_status
                 }
             },
         }),
@@ -31,19 +34,30 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         })
     ],
 
+    pages: {
+        error: "/auth/error"
+    },
+
     callbacks: {
         async jwt({ token, user }) {
             if (user) {
                 token.id = user.id
                 token.email = user.email
+                token.account_status = user.account_status
             }
             return token
         },
 
         async session({ session, token }) {
+
+            // if (token.account_status === "deactivated") {
+            // return null
+            // }
+
             if (session.user) {
                 session.user.id = token.id
                 session.user.email = token.email
+                session.user.account_status = token.account_status
             }
             return session
         },
@@ -63,6 +77,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             const existingUser = await dbConnect(collections?.users).findOne(query)
 
             if (existingUser) {
+
+                if (existingUser.account_status === "deactivated") {
+                    return false
+                }
+
+                user.id = existingUser._id.toString()
+                user.account_status = existingUser.account_status
                 return true
             }
 
@@ -81,6 +102,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 is_verified: false,
                 provider,
                 role: 'user',
+                account_status: 'active',
                 created_at: new Date()
             }
 

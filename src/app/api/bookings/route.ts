@@ -1,7 +1,4 @@
-import { bookingConfirmation } from "../../../lib/bookingConfirmation";
 import { collections, dbConnect } from "../../../lib/dbConnect"
-import { orderInvoice } from "../../../lib/orderInvoice";
-import { sendEmail } from "../../../lib/sendEmail";
 
 export async function POST(req) {
 
@@ -11,20 +8,11 @@ export async function POST(req) {
 
     const { insertedId } = result
 
-    const emailHtml = bookingConfirmation({ _id: insertedId.toString(), ...booking });
-
     const { customer } = booking
 
     if (!customer?.email) {
         return Response.json({ success: false, message: "Missing email" });
     }
-
-    await sendEmail({
-        to: customer?.email,
-        subject: `Booking Received - ${insertedId}`,
-        html: emailHtml,
-        text: `Your booking ${insertedId} is created. Please complete payment.`,
-    });
 
     return Response.json({ success: true, bookingId: insertedId })
 }
@@ -33,11 +21,21 @@ export async function GET(req) {
 
     const { searchParams } = new URL(req.url)
 
-    const email = searchParams.get("email")
+    const customerId = searchParams.get("customer_id")
 
-    // const provider = searchParams.get("provider")
+    const status = searchParams.get("status")
 
-    const query = email ? { "customer.email": email } : {}
+    let query = {};
+
+    if (customerId) {
+        query["customer.id"] = customerId 
+    }
+
+    if (status) {
+        query["status"] = {
+            $in: ["Pending Payment", "Pending Approval", "Approved"]
+        }
+    }
 
     const result = await dbConnect(collections?.bookings).find(query).toArray()
 

@@ -79,9 +79,41 @@ const Profile = () => {
         prePopulate()
     }, [uploadedUrl, status, fileName])
 
+    const [fileError, setFileError] = useState(null)
+
+    const allowedTypes = [
+        'image/jpeg',
+        'image/png',
+        'image/webp'
+    ]
+
+    const maxSize = 5 * 1024 * 1024 // 5MB
+
+
     const handleFileUpload = async e => {
         const file = e.target.files?.[0]
         if (!file) return
+
+        if (!allowedTypes.includes(file.type)) {
+            setFileError(
+                'Please upload a JPG, PNG or WEBP image.'
+            )
+            e.target.value = ''
+
+            return
+        }
+
+        if (file.size > maxSize) {
+            setFileError(
+                'Profile photo must be under 5MB.'
+            )
+            e.target.value = ''
+
+            return
+        }
+
+        setFileError(null)
+
         setFileName(file.name) // ✅ store filename
         const formData = new FormData()
         formData.append("file", file)
@@ -204,6 +236,16 @@ const Profile = () => {
                                 </svg>
                             </div >
                         </figure >
+
+                        {
+                            fileError && (
+                                <div className="mt-4 max-w-[320px]">
+                                    <p className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-center text-xs font-semibold text-rose-700">
+                                        {fileError}
+                                    </p>
+                                </div>
+                            )
+                        }
 
                         {/* Dynamic Success Notification */}
                         {uploadedUrl && (
@@ -412,7 +454,7 @@ const Profile = () => {
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
                             <input {...register('is_verified', { required: true })} type="checkbox" className="sr-only peer" />
-                            <div className="w-14 h-7 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-teal-600"></div>
+                            <div className="w-14 h-8 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-teal-600"></div>
                         </label>
                     </div >
 

@@ -4,7 +4,7 @@ import Stripe from "stripe";
 import { headers } from "next/headers";
 import { ObjectId } from "mongodb";
 import { sendEmail } from "../../../../lib/sendEmail";
-import { orderInvoice } from "../../../../lib/orderInvoice";
+import { bookingReceivedEmail } from "../../../../lib/bookingReceivedEmail";
 
 export async function POST(req: Request) {
     const body = await req.text();
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
         const query = { _id: new ObjectId(bookingId) };
         await bookingsCollection.updateOne(query, {
             $set: {
-                status: "Confirmed",
+                status: "Pending Approval",
                 payment_status: "Paid",
                 payment_intent: session.payment_intent,
                 paid_at: new Date(),
@@ -55,12 +55,12 @@ export async function POST(req: Request) {
         }
         const { customer, pricing, _id } = booking;
         console.log("📧 Customer email:", customer?.email);
-        const invoiceHtml = orderInvoice(booking);
+        const receivedHtml = bookingReceivedEmail(booking);
         try {
             await sendEmail({
                 to: customer?.email,
                 subject: `Order Confirmation - ${_id}`,
-                html: invoiceHtml,
+                html: receivedHtml,
                 text: `Your order ${_id} has been confirmed. Total: $${pricing?.total_amount}.`,
             });
             console.log("✅ Email sent successfully");

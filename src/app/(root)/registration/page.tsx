@@ -9,9 +9,16 @@ import usePasswordState from '../../../hooks/usePasswordState';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+interface RegistrationForm {
+    email: string;
+    name: string;
+    password: string;
+    phone: string
+}
+
 const Registration = () => {
 
-    const { register, handleSubmit, formState: { isSubmitting } } = useForm();
+    const { register, handleSubmit, setError, clearErrors, formState: { isSubmitting, errors } } = useForm<RegistrationForm>();
 
     const { showPassword, setShowPassword } = usePasswordState()
 
@@ -45,51 +52,45 @@ const Registration = () => {
 
     const createAccount = async (user: any) => {
 
-        const serverResponse = await signUp(user);
+        try {
+            clearErrors()
 
-        if (serverResponse?.success) {
+            const serverResponse = await signUp(user);
 
-            // const { contact, ...credentials } = user;
-
-            const authResponse: any = await signIn("credentials", { ...user, redirect: false })
-
-            if (authResponse?.error) {
-
-                Swal.fire({
-                    title: 'Failed!',
-                    text: 'Something went wrong, try creating new account.',
-                    icon: "error"
-                })
+            if (!serverResponse?.success) {
+                setError(serverResponse?.field, {
+                    type: "manual",
+                    message: serverResponse.message
+                }
+                )
             }
-
             else {
-                localStorage.setItem('userData', JSON.stringify({ name: name, email: email }))
-                Swal.fire({
-                    title: 'Signed Up!',
-                    text: 'You have successfully created your account',
-                    icon: 'success'
-                })
-                    .then(() => {
-                        router.replace(callbackUrl)
-                        // router.push(callbackUrl)
-                        router.refresh()
-                    })
-            }
-            // else {
-            // Swal.fire({
-            // title: 'Logged In!',
-            // text: 'Successfully logged in',
-            // icon: 'success'
-            // }).then(() => router.push(callbackURL))
-            // }
-        }
 
-        else {
-            Swal.fire({
-                title: 'Failed!',
-                text: 'Account already exists, try creating new account',
-                icon: "error"
-            })
+                const authResponse: any = await signIn("credentials", { ...user, redirect: false })
+
+                console.log(authResponse)
+
+                if (authResponse?.ok) {
+                    localStorage.setItem('userData', JSON.stringify({ name: name, email: email }))
+                    Swal.fire({
+                        title: "Welcome!",
+                        text: "Account created successfully",
+                        icon: "success"
+                    })
+                        .then(() => {
+                            router.replace(callbackUrl)
+                            // router.push(callbackUrl)
+                            router.refresh()
+                        })
+                }
+            }
+        }
+        catch {
+            setError("root", {
+                type: "server",
+                message:
+                    "We couldn't create your account right now. Please try again."
+            });
         }
     }
 
@@ -125,9 +126,24 @@ const Registration = () => {
                             <input
                                 type="email"
                                 placeholder="name@example.com"
-                                className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 focus:bg-white outline-none transition-all duration-300 placeholder:text-slate-400"
+                                className={`w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 focus:bg-white outline-none transition-all duration-300 placeholder:text-slate-400
+                                    ${errors.email
+                                        ? "border-rose-300 bg-rose-50/40 focus:ring-rose-500/10 focus:border-rose-400"
+                                        : "border-slate-200 focus:ring-teal-500/10 focus:border-teal-500 focus:bg-white"
+                                    }`}
                                 {...register('email', { required: true })}
                             />
+
+                            {errors.email && (
+                                <div className="mt-2 flex items-center gap-2 px-1">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-rose-500 shrink-0" />
+
+                                    <p className="text-sm font-medium text-rose-700">
+                                        {errors.email.message}
+                                    </p>
+                                </div>
+                            )}
+
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-bold text-slate-700 ml-1">Contact Number</label>
@@ -137,7 +153,7 @@ const Registration = () => {
                                 pattern="[0-9+ ]*"
                                 placeholder="+880 1XXX-XXXXXX"
                                 className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 focus:bg-white outline-none transition-all duration-300 placeholder:text-slate-400"
-                                {...register('contact', { required: true })}
+                                {...register('phone', { required: true })}
                             />
                         </div>
                         <div className="space-y-2">
@@ -155,6 +171,17 @@ const Registration = () => {
                             </div>
                         </div>
                     </div>
+
+                    {errors.root && <div
+                        className=" mt-1 flex items-start gap-3 rounded-2xl border border-rose-100 bg-rose-50 px-5 py-4 text-sm font-medium text-rose-700"
+                    >
+                        <span className="mt-1 h-2 w-2 rounded-full bg-rose-500 shrink-0" />
+
+                        <span>
+                            {errors.root.message}
+                        </span>
+                    </div>}
+
                     {/* Action Button */}
                     <div className="pt-4">
                         <button

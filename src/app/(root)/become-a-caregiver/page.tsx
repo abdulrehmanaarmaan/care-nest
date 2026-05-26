@@ -36,68 +36,49 @@ const ApplyCaregiver = () => {
   const { status } = useSession()
   // console.log({ ...rest, status, data })
 
-  useEffect(() => {
-    if (status === 'unauthenticated') return
-
-    reset({
-      name: user?.name,
-      email: user?.email,
-      phone: user?.contact
-    })
-  }, [reset, status, user?.name, user?.email, user?.contact])
-
-  const router = useRouter()
-
-  // ✅ Prevent unnecessary API calls
-
-  // ================================
-  // 🔹 FORM DATA PERSISTENCE (TEXT ONLY)
-  // ================================
-  const applicationData = watch()
-  const { name, email, phone, ...rest } = applicationData
-
   const [isHydrated, setIsHydrated] = useState(false)
 
-  useEffect(() => {
-    if (typeof window === 'undefined' || !isHydrated || status === 'unauthenticated') return;
+  const applicationData = watch()
+  const { name, email, ...rest } = applicationData
 
+  useEffect(() => {
+    if (!isHydrated || status === 'unauthenticated') return;
     const timeout = setTimeout(() => {
       localStorage.setItem(
         'applicationData',
-        JSON.stringify(rest)
+        JSON.stringify({ ...rest })
       );
     }, 300)
     return () => clearTimeout(timeout)
-
   }, [isHydrated, status, rest])
 
+  // useEffect(() => {
+  // if (status === 'unauthenticated') return
+  // reset({
+  // name: user?.name,
+  // email: user?.email,
+  // phone: user?.phone
+  // })
+  // }, [reset, status, user?.name, user?.email, user?.phone])
+
   useEffect(() => {
-    if (status === 'unauthenticated') return;
-
+    if (status === 'unauthenticated' || isHydrated === true) return;
     const saved = localStorage.getItem('applicationData')
-
     if (saved) {
       const parsedData = JSON.parse(saved)
-      reset(parsedData)
+      reset({
+        ...parsedData,
+        name: user?.name,
+        email: user?.email,
+        phone: user?.phone || parsedData?.phone
+      })
     }
-
     setIsHydrated(true)
-  }, [reset, status])
+  }, [reset, status, user?.name, user?.email, user?.phone, isHydrated])
 
-  // ================================
-  // 🔹 FILE (IMAGE) STATE
-  // ================================
+  const router = useRouter()
+
   const [uploadedUrl, setUploadedUrl] = useState(null)
-
-  // useEffect(() => {
-  // if (typeof window === 'undefined') return;
-  // const savedUrl = localStorage.getItem("uploadedDocument")
-  // if (savedUrl) {
-  // const parsedUrl = JSON.parse(savedUrl)
-  // setUploadedUrl(savedUrl)
-  // reset({ documentUrl: parsedUrl })
-  // }
-  // }, [reset, status])
 
   const [fileName, setFileName] = useState("document.jpg")
 
@@ -149,10 +130,46 @@ const ApplyCaregiver = () => {
 
   useUnsavedChangesHandler({ hasUnsavedChanges, pathname })
 
+  const [fileError, setFileError] = useState('')
+
+  const allowedTypes = [
+    'application/pdf',
+    'image/jpeg',
+    'image/png'
+  ]
+
+  const maxSize = 5 * 1024 * 1024
+
   const handleFileUpload = async e => {
 
     const file = e.target.files?.[0]
     if (!file) return
+
+    if (!allowedTypes.includes(file.type)) {
+      setFileError(
+        'Only PDF, JPG or PNG files are allowed.'
+      )
+
+      // e.target.value = ''
+
+      // setUploadedUrl(null)
+
+      return
+    }
+
+    if (file.size > maxSize) {
+      setFileError(
+        'Maximum file size is 5MB.'
+      )
+
+      // e.target.value = ''
+
+      // setUploadedUrl(null)
+
+      return
+    }
+
+    setFileError('')
 
     setFileName(file.name) // ✅ store filename
 
@@ -161,7 +178,7 @@ const ApplyCaregiver = () => {
     formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET)
 
     const res = await fetch(
-      `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+      `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/auto/upload`,
       { method: "POST", body: formData }
     )
 
@@ -191,14 +208,14 @@ const ApplyCaregiver = () => {
   // ================================
   // 🔹 SUBMIT HANDLER
   // ================================
-  const submitApplication = async (formData) => {
+  const submitApplication = async data => {
 
     // if (!uploadedUrl) {
     // alert("Please upload a document")
     // return
     // }
 
-    const { name, email, phone, experience, specialization, description, agreedToTerms } = formData
+    const { name, email, phone, experience, specialization, description, agreedToTerms } = data
 
     const application = {
       userId: user?._id,
@@ -406,10 +423,15 @@ const ApplyCaregiver = () => {
                   pattern={field.name === 'phone' ? "[0-9+ ]*" : undefined}
                   placeholder={field.placeholder}
                   disabled={
-                    field.name === 'name' ? (user?.name && Boolean(watch('name'))) :
-                      field.name === 'email' ? (user?.email && Boolean(watch('email'))) :
-                        field.name === 'phone' ? (user?.contact && Boolean(watch('phone'))) : false
+                    field.name === 'name' ? user?.name :
+                      field.name === 'email' ? user?.email :
+                        field.name === 'phone' ? user?.phone : false
                   }
+                  // defaultValue={
+                  // field.name === 'name' ? user?.name :
+                  // field.name === 'email' ? user?.email :
+                  // (field.name === 'phone' && user?.contact) ? user?.contact : false
+                  // }
                   className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 focus:ring-4 focus:ring-teal-500/5 focus:border-teal-500 focus:bg-white outline-none transition-all font-medium text-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
                 />
               </div>
@@ -465,6 +487,19 @@ const ApplyCaregiver = () => {
                 <p className="text-xs text-slate-400">PDF, JPG or PNG (Max 5MB)</p>
               </div>
             </div>
+
+            {fileError && (
+              <div
+                className="mt-4 rounded-2xl border border-rose-100 bg-rose-50 px-5 py-4 animate-in fade-in duration-300"
+              >
+                <p
+                  className="text-sm font-semibold text-rose-700 leading-relaxed text-center sm:text-left"
+                >
+                  {fileError}
+                </p>
+              </div>
+            )}
+
             {/* Uploaded Feedback with Next.js Image */}
             {uploadedUrl && (
               <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-emerald-50 rounded-3xl border border-emerald-100 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full">

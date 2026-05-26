@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { FaQuoteLeft, FaCheckCircle, FaArrowRight } from 'react-icons/fa';
 import LoadingSkeleton from '../components/LoadingSkeleton';
+import Image from 'next/image';
 
 export default function Home() {
 
@@ -78,9 +79,9 @@ export default function Home() {
                 href='#services' className="bg-teal-600 text-white font-bold px-10 py-4 rounded-2xl shadow-lg shadow-teal-600/30 hover:bg-teal-700 hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                 Explore Services
               </Link>
-              <button className="bg-white text-slate-700 border border-slate-200 font-bold px-10 py-4 rounded-2xl hover:bg-slate-50 hover:border-slate-300 transition-all duration-300">
+              <Link href='/caregivers' className="bg-white text-slate-700 border border-slate-200 font-bold px-10 py-4 rounded-2xl hover:bg-slate-50 hover:border-slate-300 transition-all duration-300">
                 Meet Caregivers
-              </button>
+              </Link>
             </div>
           </div>
           <div className="relative">
@@ -89,6 +90,8 @@ export default function Home() {
             <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-blue-50 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-pulse delay-700"></div>
             <div className="relative rounded-[3rem] p-4 bg-white shadow-2xl border border-slate-100 transform hover:rotate-1 transition-transform duration-500">
               <img
+                // width=''
+                // height=""
                 src="https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&q=80"
                 alt="Caregiving"
                 className="rounded-[2.5rem] object-cover aspect-4/3 w-full"

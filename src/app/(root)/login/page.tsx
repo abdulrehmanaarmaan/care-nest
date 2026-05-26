@@ -6,12 +6,18 @@ import Swal from 'sweetalert2';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AuthButton from '../../components/auth/AuthButton';
 import { FaEnvelope, FaEye, FaEyeSlash, FaLock } from 'react-icons/fa';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import usePasswordState from '../../../hooks/usePasswordState';
+import { login } from '../../server/actions/auth';
+
+interface LoginForm {
+    email: string;
+    password: string;
+};
 
 const Login = () => {
 
-    const { handleSubmit, register, formState: { isSubmitting } } = useForm();
+    const { handleSubmit, register, setError, clearErrors, formState: { isSubmitting, errors } } = useForm<LoginForm>();
 
     const params = useSearchParams()
 
@@ -26,15 +32,6 @@ const Login = () => {
     const { status, data } = useSession()
     const { name, email } = data?.user || {}
 
-    // if (status === 'authenticated') {
-    // Swal.fire({
-    // title: 'Logged In!',
-    // text: 'Successfully logged in',
-    // icon: 'success'
-    // router.replace('/')
-    // }
-    // }
-
     useEffect(() => {
         if (status === "authenticated") {
             // Use REPLACE, not PUSH. This overwrites the 'Login' entry 
@@ -42,6 +39,8 @@ const Login = () => {
             router.replace('/');
         }
     }, [status, router]);
+
+    // const [setError, errors] = useState({})
 
     // 1. If loading, show NOTHING or a SKELETON
     if (status === "loading") {
@@ -53,38 +52,54 @@ const Login = () => {
         return null;
     }
 
-    const login = async user => {
+    const loginWithCredentials = async user => {
 
-        const authResponse: any = await signIn("credentials", { ...user, redirect: false, callbackUrl: callbackUrl })
+        try {
+            clearErrors()
 
-        console.log(authResponse)
+            const result = await login(user);
 
-        if (authResponse?.error) {
-            Swal.fire({
-                title: 'Failed!',
-                text: 'Failed to login',
-                icon: 'error'
-            })
+            if (!result.success) {
+                setError(result.field, {
+                    type: "manual",
+                    message: result.message
+                });
+                return;
+            }
+
+            else {
+
+                const response: any = await signIn("credentials", { ...user, redirect: false, callbackUrl: callbackUrl })
+
+                if (!response.error) {
+
+                    localStorage.setItem('userData', JSON.stringify({ name: name, email: email }))
+
+                    Swal.fire({
+                        title: "Logged In!",
+                        text: "Welcome back.",
+                        icon: "success",
+                        timer: 1400,
+                    })
+                        .then(() => {
+                            router.replace(callbackUrl)
+                            router.refresh()
+                            // router.refresh()
+                        })
+                }
+            }
         }
-
-        else {
-            localStorage.setItem('userData', JSON.stringify({ name: name, email: email }))
-            Swal.fire({
-                title: 'Logged In!',
-                text: 'Logged in successfully',
-                icon: 'success'
-            })
-                .then(() => {
-                    router.replace(callbackUrl)
-                    router.refresh()
-                    // router.refresh()
-                })
+        catch {
+            setError("root", {
+                type: "manual",
+                message: "Invalid credentials"
+            });
         }
-        // router.replace(`${callbackURL}?login=success`)
-        // router.replace(currentPath) // clean URL after dismiss
-        // sessionStorage.setItem()
-        // router.push(`${callbackURL ? callbackURL : '/'}?login=success`)
     }
+    // router.replace(`${callbackURL}?login=success`)
+    // router.replace(currentPath) // clean URL after dismiss
+    // sessionStorage.setItem()
+    // router.push(`${callbackURL ? callbackURL : '/'}?login=success`)
 
 
     return (
@@ -115,7 +130,7 @@ const Login = () => {
                     <div className="flex-grow border-t border-slate-100"></div>
                 </div>
                 {/* Form Section */}
-                <form className="space-y-6" onSubmit={handleSubmit(login)}>
+                <form className="space-y-6" onSubmit={handleSubmit(loginWithCredentials)}>
                     <div className="space-y-2">
                         <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-2 flex items-center gap-2">
                             <FaEnvelope className="text-[10px]" /> Email Address
@@ -127,6 +142,16 @@ const Login = () => {
                             placeholder="name@example.com"
                             {...register('email', { required: true })}
                         />
+
+                        {errors.email && (
+                            <div className="mt-2 ml-1 flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                <p className="text-xs font-semibold text-rose-600">
+                                    {errors.email.message}
+                                </p>
+                            </div>
+                        )}
+
                     </div>
                     <div className="space-y-2">
                         <div className="flex justify-between items-center ml-2">
@@ -145,11 +170,29 @@ const Login = () => {
                                 placeholder="••••••••"
                                 {...register('password', { required: true })}
                             />
+
+                            {errors.password && (
+                                <div className="mt-2 ml-1 flex items-center gap-2">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                    <p className="text-xs font-semibold text-rose-600">
+                                        {errors.password.message}
+                                    </p>
+                                </div>
+                            )}
+
                             <button onClick={() => setShowPassword(!showPassword)} type='button' className='absolute right-4 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 rounded-lg cursor-pointer' aria-label={showPassword ? "Hide password" : "Show password"}>
                                 {!showPassword ? <FaEye className="text-lg" /> : <FaEyeSlash className="text-lg" />}
                             </button>
                         </div>
                     </div>
+
+                    {errors.root && (
+                        <div className="mb-2 rounded-2xl border border-rose-100 bg-rose-50 px-5 py-4 text-sm font-semibold text-rose-700 flex items-start gap-2">
+                            <span className="mt-1 w-2 h-2 rounded-full bg-rose-500"></span>
+                            <span>{errors.root.message}</span>
+                        </div>
+                    )}
+
                     <button
                         type="submit"
                         disabled={isSubmitting}
