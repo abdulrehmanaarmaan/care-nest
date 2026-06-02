@@ -9,6 +9,7 @@ import { FaEnvelope, FaEye, FaEyeSlash, FaLock } from 'react-icons/fa';
 import { useEffect, useState } from 'react';
 import usePasswordState from '../../../hooks/usePasswordState';
 import { login } from '../../server/actions/auth';
+import useUserData from '../../../hooks/useUserData';
 
 interface LoginForm {
     email: string;
@@ -31,6 +32,8 @@ const Login = () => {
 
     const { status, data } = useSession()
     const { name, email } = data?.user || {}
+
+    const { refetch } = useUserData()
 
     useEffect(() => {
         if (status === "authenticated") {
@@ -84,6 +87,7 @@ const Login = () => {
                         .then(() => {
                             router.replace(callbackUrl)
                             router.refresh()
+                            refetch()
                             // router.refresh()
                         })
                 }

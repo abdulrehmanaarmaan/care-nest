@@ -35,15 +35,3 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 7XEeQxLvYn0BAyZF
-
-
-1. Need to fix the issue of showing the warning alert when navigating back.
-2. Need to fix the API for email.
-3. Need to add query params in an API in 'booking/[id]'.
-4. Need to save to local storage based on service_name.
-5. Need to change public url in .env
-6. Need to add loaders for different routes
-7. Can't remove localStorage after successful application.
-8. Have to fix issue between Google and Credential double data.
-9. Issue with image uploading.
-10. Need to ask whether can show a text instead of toast for {success: false}.

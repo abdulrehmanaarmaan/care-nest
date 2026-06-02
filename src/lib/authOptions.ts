@@ -50,9 +50,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         async session({ session, token }) {
 
-            // if (token.account_status === "deactivated") {
-            // return null
-            // }
+            if (token.account_status === "deactivated") {
+                return null
+            }
 
             if (session.user) {
                 session.user.id = token.id

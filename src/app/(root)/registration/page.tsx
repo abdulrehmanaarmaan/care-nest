@@ -8,6 +8,7 @@ import AuthButton from '../../components/auth/AuthButton';
 import usePasswordState from '../../../hooks/usePasswordState';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useRouter, useSearchParams } from 'next/navigation';
+import useUserData from '../../../hooks/useUserData';
 
 interface RegistrationForm {
     email: string;
@@ -32,6 +33,8 @@ const Registration = () => {
 
     const { data } = useSession()
     const { name, email } = data?.user || {}
+
+    const { refetch } = useUserData()
 
     // if (status === 'authenticated') {
     // Swal.fire({
@@ -81,6 +84,7 @@ const Registration = () => {
                             router.replace(callbackUrl)
                             // router.push(callbackUrl)
                             router.refresh()
+                            refetch()
                         })
                 }
             }

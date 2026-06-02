@@ -3,22 +3,17 @@ import { useQuery } from '@tanstack/react-query';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import React from 'react';
+import useCaregiverDetails from '../../../../hooks/useCaregiverDetails';
 
 const CaregiverDetails = () => {
 
     const { id } = useParams()
 
-    const { data: caregiver, isLoading } = useQuery({
-        queryKey: ['caregiver', id],
-        queryFn: async () => {
-            const result = await fetch(`/api/caregivers/${id}`)
-            return result.json()
-        }
-    })
+    const { application, isLoading } = useCaregiverDetails(id)
 
     if (isLoading) return <span>Loading...</span>
 
-    const { documentUrl, documentType, name, status, phone, email, experience, specialization, description, createdAt } = caregiver || {}
+    const { documentUrl, documentType, name, status, phone, email, experience, specialization, description, createdAt } = application || {}
 
     const formattedJoinDate = new Date(createdAt).toLocaleDateString('en-US', {
         day: 'numeric',

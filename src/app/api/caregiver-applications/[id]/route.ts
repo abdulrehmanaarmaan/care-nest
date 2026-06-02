@@ -16,12 +16,8 @@ export async function GET(req, { params }) {
 export async function PATCH(req, { params }) {
     const { id } = await params
 
-    // const { searchParams } = new URL(req.url)
-
     const updatedStatus = await req.json()
     console.log(updatedStatus)
-
-    // const status = searchParams.get("status")
 
     const query = { _id: new ObjectId(id) }
 
@@ -33,5 +29,5 @@ export async function PATCH(req, { params }) {
 
     const result = await dbConnect(collections.applications).updateOne(query, updatedApplication)
 
-    return Response.json({ success: result.modifiedCount })
+    return Response.json({ success: result?.modifiedCount })
 }

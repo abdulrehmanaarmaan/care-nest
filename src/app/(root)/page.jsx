@@ -4,32 +4,16 @@ import Link from 'next/link';
 import { FaQuoteLeft, FaCheckCircle, FaArrowRight } from 'react-icons/fa';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import Image from 'next/image';
+import useAllServices from '../../hooks/useAllServices';
+import useAllReviews from '../../hooks/useAllReviews';
 
 export default function Home() {
 
-  const { data: services = [], isLoading: servicesLoading } = useQuery({
-    queryKey: ['services'],
-    queryFn: async () => {
-      const result = await fetch('/api/services')
-      return result.json()
-    }
-  })
+  const { services, isLoading: servicesLoading } = useAllServices()
 
-  const { data: reviews = [], isLoading: reviewsLoading } = useQuery({
-    queryKey: ['reviews'],
-    queryFn: async () => {
-      const result = await fetch('/api/reviews')
-      return result.json()
-    }
-  })
+  const { reviews, isLoading: reviewsLoading } = useAllReviews()
 
   console.log(services)
-  // if (reviewsLoading || servicesLoading) {
-  // return <Loader />
-  // }
-
-  // const scroll = useScrollHandler('services')
-  // const isScrolling = useRef(false)
 
   const scrollToServices = e => {
     e.preventDefault();
@@ -40,21 +24,6 @@ export default function Home() {
       window.history.replaceState(null, '', window.location.pathname);
     }
   }
-
-  // useEffect(() => {
-  // if (window.location.hash) {
-  // const timeout = setTimeout(() => {
-  // window.history.replaceState(
-  // null,
-  // '',
-  // window.location.pathname
-  // );
-  // }, 1000);
-  // return () => clearTimeout(timeout);
-  // }
-  // }, []);
-
-  // useScrollHandler({ isScrolling, id: "#services" })
 
   return (
     <div className="w-full font-sans antialiased text-slate-900 bg-white">

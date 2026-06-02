@@ -1,21 +1,13 @@
 'use client'
-import { useQuery } from '@tanstack/react-query';
-import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import React, { useState } from 'react';
+import React from 'react';
 import { FaCheckCircle, FaClock, FaDollarSign, FaEye, FaSearch, FaTimesCircle } from 'react-icons/fa';
 import Swal from 'sweetalert2';
-import useUserData from '../../../../hooks/useUserData';
+import useBookingsData from '../../../../hooks/useBookingsData';
 
 const Bookings = () => {
 
-    const { data: bookings = [], refetch } = useQuery({
-        queryKey: ['bookings'],
-        queryFn: async () => {
-            const result = await fetch('/api/bookings')
-            return result.json()
-        }
-    })
+    const { bookings, refetch } = useBookingsData()
 
     const approveBooking = async (id: number) => {
 
@@ -31,9 +23,7 @@ const Bookings = () => {
             if (res.isConfirmed) {
 
                 const res = await fetch(`/api/bookings/${id}?status=Approved`, {
-                    method: 'PATCH',
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(status)
+                    method: 'PATCH'
                 })
 
                 const result = await res.json()
@@ -64,9 +54,7 @@ const Bookings = () => {
             if (res.isConfirmed) {
 
                 const res = await fetch(`/api/bookings/${id}?status=Rejected`, {
-                    method: 'PATCH',
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(status)
+                    method: 'PATCH'
                 })
 
                 const result = await res.json()
@@ -105,8 +93,6 @@ const Bookings = () => {
 
                     const res = await fetch(`/api/bookings/${id}?status=Confirmed`, {
                         method: 'PATCH',
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(status)
                     })
 
                     const result = await res.json()
@@ -219,13 +205,16 @@ const Bookings = () => {
                                         {/* State Modulation Route Actions */}
                                         <td className="px-6 py-5 text-right">
                                             <div className="flex justify-end gap-1">
-                                                <Link
-                                                    href={`/dashboard/admin/bookings/${booking?._id}`}
-                                                    className="p-2.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-all"
-                                                    title="Inspect Metadata Ledger"
+
+                                                < Link
+                                                    href={(booking?.status !== 'Pending Approval' && booking?.status !== 'Approved' && booking?.status !== 'Rejected') ? `/dashboard/admin/bookings/${booking?._id}` : '#'}
+                                                    className={`p-2.5 text-slate-400 rounded-xl transition-all"
+                                                        title="Inspect Metadata Ledger ${booking?.status === 'Confirmed' || booking?.status === 'Assigned' || booking?.status === 'In Progress' || booking?.status === 'Completed' ? 'hover:text-teal-600 hover:bg-teal-50' : 'opacity-30 cursor-not-allowed'}`}
+                                                    title={booking?.status === 'Confirmed' ? 'Assign caregiver' : ''}
                                                 >
                                                     <FaEye size={16} />
                                                 </Link>
+
                                                 {/* Payment Required Notice */}
                                                 {booking?.status === 'Pending Payment' &&
                                                     booking?.payment_status !== 'Paid' && (
@@ -290,7 +279,7 @@ const Bookings = () => {
                     </table>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 

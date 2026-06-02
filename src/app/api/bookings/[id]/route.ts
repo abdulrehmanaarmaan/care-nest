@@ -15,7 +15,15 @@ export async function GET(req, { params }) {
 
     const service_id = searchParams.get("service_id")
 
-    const query = { _id: new ObjectId(id), "customer.id": user?.id, service_id }
+    let query = {}
+
+    if (service_id) {
+        query = { _id: new ObjectId(id), "customer.id": user?.id, service_id }
+    }
+
+    else {
+        query = { _id: new ObjectId(id) }
+    }
 
     const result = await dbConnect(collections?.bookings).findOne(query)
 
@@ -30,7 +38,13 @@ interface UpdatedBooking {
 
 export async function PATCH(req, { params }) {
 
-    const booking = await req.json()
+    let booking;
+
+    try {
+        booking = await req.json()
+    } catch {
+        booking = null
+    }
 
     const { id } = await params
 
@@ -44,7 +58,7 @@ export async function PATCH(req, { params }) {
 
     const { user } = await auth()
 
-    const { searchParams } = await new URL(req.url)
+    const { searchParams } = new URL(req.url)
 
     const status = searchParams.get("status")
 
@@ -57,7 +71,6 @@ export async function PATCH(req, { params }) {
             status,
             approved_at: new Date().toISOString(),
             approved_by: user?.id,
-            "workflow.allocation_status": "Assigned",
             updated_at: new Date().toISOString()
         }
     }
@@ -83,6 +96,21 @@ export async function PATCH(req, { params }) {
                 method: 'Manual'
             },
             updated_at: new Date()
+        }
+    }
+
+    else if (status === 'In Progress' || status === 'Pending Reassignment') {
+        updatedBooking.$set = {
+            status,
+            updated_at: new Date().toISOString()
+        }
+    }
+
+    else if (status === 'Completed') {
+        updatedBooking.$set = {
+            status,
+            updated_at: new Date().toISOString(),
+            payout_status: 'Available'
         }
     }
 

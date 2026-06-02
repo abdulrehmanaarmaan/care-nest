@@ -1,14 +1,15 @@
 'use client'
-import React, { useEffect, useRef, useState } from 'react';
+import React, { ReactNode, useEffect, useRef, useState } from 'react';
 import useServiceInfo from '../../../../hooks/useServiceInfo';
 import { FaArrowLeft, FaArrowRight, FaCalendarAlt, FaShieldAlt } from 'react-icons/fa';
 import { useParams, usePathname, useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
 import Swal from 'sweetalert2';
 import Loader from '../../loading';
 import useUnsavedChangesHandler from '../../../../hooks/useUnsavedChangesWarning';
+import useBookingDetails from '../../../../hooks/useBookingDetails';
+import useLocationDetails from '../../../../hooks/useLocationDetails';
 
 const Booking = () => {
 
@@ -16,21 +17,17 @@ const Booking = () => {
 
     const { service, isLoading: loading } = useServiceInfo(id)
 
-    const { data: warehouses = [], isLoading } = useQuery({
-        queryKey: ['warehouses'],
-        queryFn: async () => {
-            const result = await fetch('/api/warehouses')
-            return result.json()
-        }
-    })
+    const { warehouses, isLoading, uniqueRegions } = useLocationDetails()
 
     const isSelectedRegion = useRef(false)
 
     const [region, setRegion] = useState(null)
 
-    const { register, watch, handleSubmit, setValue, reset, formState: { isDirty, isSubmitting } } = useForm()
+    const { register, watch, handleSubmit, reset, setValue, formState: { isDirty, isSubmitting } } = useForm()
 
     const watchedQuantity = watch('quantity', 1)
+
+    const is_emergency = watch('is_emergency')
 
     const { data } = useSession()
     const userId = data?.user?.id || ''// const  = data.user || {}
@@ -53,20 +50,11 @@ const Booking = () => {
 
     useUnsavedChangesHandler({ hasUnsavedChanges, pathname })
 
-    const { data: existingBooking } = useQuery({
-        queryKey: ['existingBooking', existingBookingId, id],
-        queryFn: async () => {
-            if (!existingBookingId || !id) return null;
-            const result = await fetch(`/api/bookings/${existingBookingId}?service_id=${id}`)
-            return result.json()
-        },
-        enabled: !!existingBookingId && !!id
-    })
+    const { booking: existingBooking } = useBookingDetails(existingBookingId, id)
 
     console.log(existingBooking)
 
     useEffect(() => {
-        // const urlBookingId = new URLSearchParams(window.location.search).get('bookingId');
         const savedBookingId = localStorage.getItem('pendingBookingId');
 
         const finalId = savedBookingId;
@@ -130,9 +118,6 @@ const Booking = () => {
 
     const totalCost = price * watchedQuantity
 
-    const regions = new Set(warehouses.map(warehouse => warehouse?.region))
-    const uniqueRegions: any = [...regions]
-
     const selectedWarehouses = warehouses.filter(warehouse => warehouse?.region === region)
 
     const selectedDistricts = selectedWarehouses.map(warehouse => warehouse?.district)
@@ -158,6 +143,7 @@ const Booking = () => {
                     unit: unit,
                     total_amount: totalCost,
                 },
+                is_emergency,
                 location: {
                     division: region,
                     district: district,
@@ -288,6 +274,48 @@ const Booking = () => {
                             </div>
                         </section>
 
+                        {/* Emergency Booking Configuration Module */}
+                        <section className="bg-white shadow-sm border border-slate-200 rounded-[2rem] p-6 sm:p-8 hover:border-rose-100 transition-colors duration-300">
+                            <div className="flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap">
+                                <div className="flex items-start gap-4">
+                                    <span className="w-10 h-10 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center font-bold flex-shrink-0 border border-rose-100/60">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                        </svg>
+                                    </span>
+                                    <div className="space-y-1 text-left">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <h3 className="text-lg font-black text-slate-900 tracking-tight">Emergency Priority Routing</h3>
+                                            <span className="text-[9px] font-black tracking-widest text-rose-600 uppercase bg-rose-50 border border-rose-100 px-2 py-0.5 rounded-md">
+                                                On-Demand Dispatch
+                                            </span>
+                                        </div>
+                                        <p className="text-slate-400 text-xs font-medium leading-relaxed max-w-md">
+                                            Activate this options if immediate dispatch is needed. This will alert local caregivers on standby, route past basic schedules, and place this allocation at the top of our queue.
+                                        </p>
+                                    </div>
+                                </div>
+                                {/* Custom Accessible Interactive Switch Component */}
+                                <div className="w-full sm:w-auto flex justify-end pt-2 sm:pt-0 border-t border-slate-50 sm:border-0">
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            {...register('is_emergency')}
+                                            className="peer sr-only"
+                                        />
+
+                                        <div
+                                            className="relative h-6 w-11 rounded-full bg-slate-200 border border-slate-200 transition-colors duration-300 peer-checked:bg-teal-600 after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:duration-300 after:content-[''] peer-checked:after:translate-x-5 peer-focus:outline-none peer peer-checked:after:border-white after:border-gray-300 after:border"
+                                        >
+                                            <span
+                                                className={`pointer-events-none inline-block h-full w-5 transform rounded-full bg-white shadow-sm transition duration-300 ease-in-out absolute ${is_emergency ? 'right-0' : 'right-full'}`}
+                                            />
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </section>
+
                         {/* Step 2: Location */}
                         <section className="bg-white shadow-sm border border-slate-200 rounded-[2rem] p-8 hover:border-teal-100 transition-colors">
                             <div className="flex items-center gap-4 mb-8">
@@ -297,19 +325,27 @@ const Booking = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <label className="block text-sm font-bold text-slate-700 ml-1">Division</label>
-                                    <select required value={region || 'Select Division'} onChange={(e) => {
-                                        setRegion(e.target.value)
-                                        isSelectedRegion.current = true
-                                        setValue('district', 'Select District')
-                                    }} className="w-full border-2 border-slate-100 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 outline-none bg-white font-medium text-slate-700 appearance-none cursor-pointer">
+                                    <select
+                                        required
+                                        value={region || 'Select Division'}
+                                        onChange={(e) => {
+                                            setRegion(e.target.value)
+                                            isSelectedRegion.current = true
+                                            setValue('district', 'Select District')
+                                        }}
+                                        className="w-full border-2 border-slate-100 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 outline-none bg-white font-medium text-slate-700 appearance-none cursor-pointer">
                                         <option disabled>Select Division</option>
-                                        {uniqueRegions.map((region, i) => (<option key={i}>{region}</option>))}
+                                        {uniqueRegions.map((region: ReactNode, i) => (<option key={i}>{region}</option>))}
                                     </select>
                                 </div>
                                 <div className="space-y-2">
                                     <label className="block text-sm font-bold text-slate-700 ml-1">District</label>
-                                    <select onClick={() => disable(true)}
-                                        {...register('district', { required: true })} value={watch('district') || ''} className="w-full border-2 border-slate-100 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 outline-none bg-white font-medium text-slate-700 appearance-none cursor-pointer">
+                                    <select
+                                        onClick={() => disable(true)}
+                                        {...register('district')}
+                                        required
+                                        value={watch('district') || ''}
+                                        className="w-full border-2 border-slate-100 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 outline-none bg-white font-medium text-slate-700 appearance-none cursor-pointer">
                                         <option disabled={Boolean(isDisabled)}>{region ? 'Select District' : 'Select Division First'}</option>
                                         {selectedDistricts.map((district, i) => (<option key={i}>{district}</option>))}
                                     </select>

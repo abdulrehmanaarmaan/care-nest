@@ -1,20 +1,14 @@
 'use client'
 import { useQuery } from '@tanstack/react-query';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import React from 'react';
 import { FaArrowRight, FaBriefcase, FaCalendarAlt, FaCheckCircle, FaClock, FaEnvelope, FaFileAlt, FaFileMedical, FaPhoneAlt, FaShieldAlt, FaStethoscope, FaTimesCircle, FaUser, FaUserCheck } from 'react-icons/fa';
+import useMyApplication from '../../../hooks/useMyApplication';
 
 const MyApplication = () => {
 
-    const { data: { application } = {}, refetch } = useQuery({
-        queryKey: ['existingApplication'],
-        queryFn: async () => {
-            const res = await fetch('/api/caregivers/apply')
-            return res.json()
-        }
-    })
-
-    // const { application } = myApplication
+    const { application } = useMyApplication()
 
     if (!application) {
         return (

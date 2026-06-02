@@ -11,9 +11,11 @@ const useCaregiversData = () => {
     const { data: caregivers = [] } = useQuery({
         queryKey: ['caregivers', search, specialization],
         queryFn: async () => {
-            const result = await fetch(`/api/caregivers?status=approved&search=${search}&specialization=${specialization}`)
+            const url = (search && specialization) ? `/api/caregiver-applications?status=approved&search=${search}&specialization=${specialization}` : '/api/caregiver-applications?status=approved'
+            const result = await fetch(url)
             return result.json()
-        }
+        },
+        enabled: (search && search) ? (!!search && !!specialization) : true
     })
 
     return { caregivers, search, setSearch, specialization, setSpecialization };

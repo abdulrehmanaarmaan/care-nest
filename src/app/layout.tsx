@@ -2,6 +2,7 @@ import React from 'react';
 import NextAuthProvider from '../providers/NextAuthProvider';
 import './globals.css'
 import QueryProvider from '../providers/QueryProvider';
+import { Toaster } from 'sonner';
 
 export const metadata = {
     title: 'Care Nest',
@@ -16,6 +17,7 @@ export default function RootLayout({ children }) {
             <body>
                 <QueryProvider>
                     <NextAuthProvider>
+                        <Toaster richColors position="top-right" />
                         {children}
                     </NextAuthProvider>
                 </QueryProvider>
@@ -23,5 +25,3 @@ export default function RootLayout({ children }) {
         </html >
     );
 };
-
-// export default layout;

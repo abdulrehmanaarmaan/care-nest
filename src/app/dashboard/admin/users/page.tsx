@@ -14,8 +14,6 @@ const Users = () => {
 
     const { id: myId } = data?.user || {}
 
-    console.log(myId)
-
     const grantAdminRole = async (id: string) => {
 
         if (id == myId) {
@@ -27,8 +25,6 @@ const Users = () => {
         }
 
         const user = users.find(user => user?._id === id)
-
-        console.log(user)
 
         if (user.role === 'admin') {
             return Swal.fire({

@@ -1,6 +1,6 @@
 'use client'
 import { HeartHandshake, LogOut, Menu, User, X } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import NavLink from './NavLink';
 import Link from 'next/link';
 import { signOut, useSession } from 'next-auth/react';
@@ -15,7 +15,7 @@ const Navbar = () => {
 
     const { status } = useSession()
 
-    const user = useUserData()
+    const { user } = useUserData()
 
     const { name, profile_image } = user || {}
 

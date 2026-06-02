@@ -4,7 +4,7 @@ import React from 'react';
 
 const useUserData = () => {
 
-    const { data: user, refetch } = useQuery({
+    const { data: user, isLoading, refetch } = useQuery({
         queryKey: ['user'],
         queryFn: async () => {
             const res = await fetch('/api/me')
@@ -12,7 +12,7 @@ const useUserData = () => {
         }
     })
 
-    return { ...user, refetch };
+    return { isLoading, refetch, user };
 };
 
 export default useUserData;

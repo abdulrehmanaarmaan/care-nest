@@ -1,30 +1,35 @@
 'use client'
 import { useSession } from 'next-auth/react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { ReactNode, useEffect, useRef, useState } from 'react';
 import useUserData from '../../../hooks/useUserData';
 import { useForm } from 'react-hook-form';
 import Swal from 'sweetalert2';
 import Image from 'next/image';
-// import { TruckElectricIcon } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-// import usePersistanceHandler from '../../../hooks/useUnsavedChangesWarning';
 import useUnsavedChangesHandler from '../../../hooks/useUnsavedChangesWarning';
+import useLocationDetails from '../../../hooks/useLocationDetails';
 
 const Profile = () => {
 
-    const user = useUserData()
-    console.log(user)
+    const { user, refetch } = useUserData()
 
-    const { refetch, ...rest } = user || {}
+    const { email, name, profile_image, address, emergency_contact, role } = user || {}
 
-    const { email, name, profile_image, address, emergency_contact } = rest
+    const { warehouses, uniqueRegions } = useLocationDetails()
 
+    const [region, setRegion] = useState(null)
 
-    const { postal_code, street_address, city } = address || {}
+    const [isDisabled, disable] = useState(false)
+
+    const isSelectedRegion = useRef(false)
+
+    const selectedWarehouses = warehouses.filter(warehouse => warehouse?.region === region)
+    const selectedDistricts = selectedWarehouses.map(warehouse => warehouse?.district)
+
+    const { street_address, district, division } = address || {}
     const { full_name, phone_number } = emergency_contact || {}
-    // console.log(emergency_contact_number)
 
-    const { register, handleSubmit, reset, formState: { isDirty } } = useForm()
+    const { register, handleSubmit, reset, watch, setValue, formState: { isDirty } } = useForm()
 
     const { status } = useSession()
 
@@ -34,15 +39,16 @@ const Profile = () => {
 
     useEffect(() => {
         if (status !== 'authenticated' || hasHydrated.current) return
-        // localStorage.removeItem('initialData')
+
         const timeout = setTimeout(() => {
-            reset({ postal_code, street_address, city, full_name, phone_number, ...rest })
+            reset({ ...user, district, street_address, full_name, phone_number })
+            setRegion(division)
             hasHydrated.current = true
-            // localStorage.removeItem('initialData')
+
         }, 300)
         return () => clearTimeout(timeout)
 
-    }, [status, reset, postal_code, street_address, city, full_name, phone_number, rest])
+    }, [status, reset, user, district, street_address, full_name, phone_number, division])
 
     const pathname = usePathname()
 
@@ -71,7 +77,9 @@ const Profile = () => {
                 })
                 const dataTransfer = new DataTransfer()
                 dataTransfer.items.add(file)
-                fileInputRef.current.files = dataTransfer.files
+                if (dataTransfer.files) {
+                    fileInputRef.current.files = dataTransfer.files
+                }
             } catch (err) {
                 console.error("File restore failed", err)
             }
@@ -132,16 +140,20 @@ const Profile = () => {
 
 
     const updateProfile = async data => {
-        const { name, phone, full_name, phone_number, date_of_birth, gender, postal_code, street_address, city, bio, medical_notes, is_verified } = data
+        const { name, phone, full_name, emergency_phone, date_of_birth, gender, street_address, district, bio, medical_notes, is_verified } = data
 
         const updatedProfile = {
             name,
             profile_image: uploadedUrl || profile_image,
             phone,
-            emergency_contact: { full_name, phone_number },
+            emergency_contact: { full_name, emergency_phone },
             date_of_birth,
             gender,
-            address: { postal_code, street_address, city },
+            address: {
+                division: region,
+                district,
+                street_address
+            },
             bio,
             medical_notes,
             is_verified,
@@ -162,10 +174,6 @@ const Profile = () => {
                 text: 'Your profile has been updated.',
                 icon: 'success'
             })
-
-            // if (fileInputRef.current) {
-            // fileInputRef.current.value = ''
-            // }
 
             refetch()
             setProfileUrl(null)
@@ -276,7 +284,6 @@ const Profile = () => {
                                         onClick={() => {
                                             if (fileInputRef.current) fileInputRef.current.value = "";
                                             setProfileUrl(null)
-                                            // Clear your uploadedUrl file state hook or react-hook-form entry here
                                         }}
                                         className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-white border border-rose-100 hover:bg-rose-50 text-rose-600 text-xs font-black uppercase tracking-wider transition-all duration-300 active:scale-[0.96] cursor-pointer shadow-sm hover:shadow-rose-100"
                                     >
@@ -318,7 +325,6 @@ const Profile = () => {
                                 <label className="text-xs font-bold text-slate-700 ml-1">Full Name <span className="text-teal-600">*</span></label>
                                 <input
                                     {...register('name', { required: true })}
-                                    // defaultValue={name}
                                     type="text"
                                     required
                                     className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 focus:bg-white outline-none transition-all duration-300 font-medium"
@@ -328,7 +334,6 @@ const Profile = () => {
                                 <label className="text-xs font-bold text-slate-700 ml-1">Email Address (Primary)</label>
                                 <input
                                     {...register('email', { required: true })}
-                                    // defaultValue={email}
                                     type="email"
                                     readOnly
                                     className="w-full bg-slate-100/50 border border-slate-200 rounded-2xl px-5 py-4 text-slate-400 font-medium outline-none cursor-not-allowed"
@@ -337,11 +342,10 @@ const Profile = () => {
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-slate-700 ml-1">Contact Number</label>
                                 <input
-                                    {...register('phone_number', { required: true })}
+                                    {...register('phone', { required: true })}
                                     type="tel"
                                     inputMode="tel"
                                     pattern="[0-9+ ]*"
-                                    // defaultValue={contact}
                                     placeholder="+880 1XXX-XXXXXX"
                                     className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 focus:bg-white outline-none transition-all duration-300 font-medium"
                                 />
@@ -351,7 +355,6 @@ const Profile = () => {
                                 <input
                                     {...register('date_of_birth')}
                                     type="date"
-                                    // defaultValue={date_of_birth}
                                     className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 focus:bg-white outline-none transition-all duration-300 font-medium"
                                 />
                             </div>
@@ -369,17 +372,72 @@ const Profile = () => {
                     </div >
 
                     {/* SECTION: ADDRESS */}
-                    < div className="space-y-6" >
+                    <div className="space-y-6">
                         <div className="flex items-center gap-3 mb-2">
-                            <h2 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em]">Residency Details</h2>
+                            <h2 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em]">Residency & Coverage</h2>
                             <div className="h-px bg-slate-100 flex-grow"></div>
                         </div>
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <input {...register('street_address', { required: true })} type="text" placeholder="Street Address" className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 focus:bg-white outline-none transition-all duration-300 font-medium md:col-span-2" />
-                            <input {...register('city', { required: true })} type="text" placeholder="City" className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 focus:bg-white outline-none transition-all duration-300 font-medium" />
-                            <input {...register('postal_code', { required: true })} type="text" placeholder="Postal Code" className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 focus:bg-white outline-none transition-all duration-300 font-medium" />
+                            {/* Street Address Input */}
+                            <div className="space-y-2 md:col-span-2">
+                                <label className="text-xs font-bold text-slate-700 ml-1">Street Address <span className="text-teal-600">*</span></label>
+                                <input
+                                    {...register('street_address')}
+                                    type="text"
+                                    placeholder="House no, Flat, Road, Area..."
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 focus:bg-white outline-none transition-all duration-300 font-medium"
+                                />
+                            </div>
+
+                            {/* Division / Region Select */}
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-slate-700 ml-1">Division / Region <span className="text-teal-600">*</span></label>
+                                <div className="relative">
+                                    <select
+                                        required={role === 'caregiver'}
+                                        value={region || 'Select Division'}
+                                        onChange={(e) => {
+                                            setRegion(e.target.value)
+                                            isSelectedRegion.current = true
+                                            setValue('district', 'Select District')
+                                        }}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 focus:bg-white outline-none transition-all duration-300 font-medium appearance-none cursor-pointer text-slate-800"
+                                    >
+                                        <option disabled value=''>Select Division</option>
+                                        {uniqueRegions.map((region: ReactNode, i) => (<option key={i}>{region}</option>))}
+                                    </select>
+                                    <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* District Select */}
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-slate-700 ml-1">District <span className="text-teal-600">*</span></label>
+                                <div className="relative">
+                                    <select
+                                        onClick={() => disable(true)}
+                                        {...register('district')}
+                                        required={role === 'caregiver'}
+                                        value={watch('district') || ''}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 focus:bg-white outline-none transition-all duration-300 font-medium appearance-none cursor-pointer text-slate-800"
+                                    >
+                                        <option disabled={Boolean(isDisabled)}>{region ? 'Select District' : district ? district : 'Select Division First'}</option>
+                                        {selectedDistricts.map((district, i) => (<option key={i}>{district}</option>))}
+                                    </select>
+                                    <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </div >
+                    </div>
 
                     {/* SECTION: BIO */}
                     < div className="space-y-2" >
@@ -435,7 +493,7 @@ const Profile = () => {
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <input {...register('full_name')} type="text" placeholder="Trusted Person's Name" className="w-full bg-white border border-rose-100 rounded-2xl px-5 py-4 outline-none focus:ring-4 focus:ring-rose-500/5 focus:border-rose-500 transition-all font-medium" />
-                            <input {...register('phone_number')} type="tel" inputMode="tel" pattern="[0-9+ ]*" placeholder="Contact's Phone Number" className="w-full bg-white border border-rose-100 rounded-2xl px-5 py-4 outline-none focus:ring-4 focus:ring-rose-500/5 focus:border-rose-500 transition-all font-medium" />
+                            <input {...register('emergency_phone')} type="tel" inputMode="tel" pattern="[0-9+ ]*" placeholder="Contact's Phone Number" className="w-full bg-white border border-rose-100 rounded-2xl px-5 py-4 outline-none focus:ring-4 focus:ring-rose-500/5 focus:border-rose-500 transition-all font-medium" />
                         </div>
                     </div >
 
@@ -453,8 +511,8 @@ const Profile = () => {
                             </div>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
-                            <input {...register('is_verified', { required: true })} type="checkbox" className="sr-only peer" />
-                            <div className="w-14 h-8 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-teal-600"></div>
+                            <input {...register('is_verified')} type="checkbox" className="sr-only peer" />
+                            <div className="w-12 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-teal-600"></div>
                         </label>
                     </div >
 

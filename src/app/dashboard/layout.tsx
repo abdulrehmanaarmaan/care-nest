@@ -1,12 +1,15 @@
 'use client'
 import Link from 'next/link';
 import React, { Suspense, useState } from 'react';
-import { signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { FaBars, FaChevronLeft, FaClipboardList, FaSignOutAlt } from 'react-icons/fa';
 import UserMenu from '../components/UserMenu';
-import QueryProvider from '../../providers/QueryProvider';
 import DashboardLoader from './loading';
 import useSignOutHandler from '../../hooks/useSignOutHandler';
+import useUserData from '../../hooks/useUserData';
+import CaregiverBanner from '../components/banner/CaregiverBanner';
+import { usePathname, useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 
 const Dashboard = ({ children }) => {
 
@@ -19,6 +22,31 @@ const Dashboard = ({ children }) => {
         { name: 'Dashboard', href: '/dashboard' },
         { name: 'My Bookings', href: '/dashboard/my-bookings', icon: <FaClipboardList /> },
     ];
+
+    const router = useRouter()
+
+    const { user } = useUserData()
+    const { role, address } = user || {}
+
+    const { division, district } = address || {}
+
+    const { data } = useSession()
+    const { id } = data?.user || {}
+
+    const { data: savedSchedule = {} } = useQuery({
+        queryKey: ['saved_schedule', id],
+        enabled: !!id,
+        queryFn: async () => {
+            const res = await fetch(`/api/caregiver-schedules?caregiver_id=${id}`)
+            return res.json()
+        }
+    })
+
+    const pathname = usePathname()
+
+    const showLocationBanner = role === 'caregiver' && !division && !district && pathname !== '/dashboard/profile'
+
+    const showAvailabilityBanner = role === 'caregiver' && division && district && !savedSchedule?._id && pathname !== '/dashboard/caregiver/availability'
 
     return (
         <div className="flex min-h-screen bg-slate-50 font-sans">
@@ -110,15 +138,30 @@ const Dashboard = ({ children }) => {
                 {/* Content */}
                 <main className="flex-1 overflow-y-auto p-4 md:p-10">
                     <div className="max-w-6xl mx-auto">
+
+                        {showLocationBanner && (
+                            <CaregiverBanner
+                                message="Add your location to become eligible for assignments."
+                                buttonText="Update Profile"
+                                onClick={() => router.push('/dashboard/profile')}
+                            />
+                        )}
+
+                        {showAvailabilityBanner && (
+                            <CaregiverBanner
+                                message="Set your availability to start receiving assignments."
+                                buttonText="Set Availability"
+                                onClick={() => router.push('/dashboard/caregiver/availability')}
+                            />
+                        )}
+
                         <Suspense fallback={<DashboardLoader />}>
                             {children}
                         </Suspense>
+
                     </div>
                 </main>
             </div>
-            {/* <Suspense fallback={null}> */}
-            {/* <AuthAlert /> */}
-            {/* </Suspense> */}
         </div>
     );
 };

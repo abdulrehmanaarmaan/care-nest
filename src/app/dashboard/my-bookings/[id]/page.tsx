@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import React from 'react';
 import { FaArrowLeft, FaCalendarCheck, FaClock, FaMapMarkerAlt, FaReceipt, FaUser } from 'react-icons/fa';
-// import { getBooking } from '../../../server/actions/bookings';
 import { auth } from '../../../../lib/authOptions';
 import { getBooking } from '../../../server/actions/bookings';
 
@@ -10,34 +9,8 @@ const BookingDetails = async ({ params }) => {
 
     const { id } = await params
 
-    // const res = await fetch(`/api/bookings/${id}`)
-
-    // if (!id) {
-    // notFound()
-    // }
-
-    // if (!res.ok) {
-    // notFound()
-    // }
-
     const { user } = await auth()
     const booking = await getBooking(id)
-
-    // const { id } = useParams()
-
-    // const router = useRouter()
-
-    // const { data: booking, isLoading } = useQuery({
-    // queryKey: ['booking', id],
-    // queryFn: async () => {
-    // const result = await fetch(`/api/bookings/${id}`)
-    // return result.json()
-    // }
-    // })
-
-    // if (isLoading) {
-    // return <span>Loading...</span>
-    // }
 
     if (!booking) {
         notFound()

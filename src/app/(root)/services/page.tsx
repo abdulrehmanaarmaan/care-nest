@@ -2,16 +2,11 @@
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import React from 'react';
+import useAllServices from '../../../hooks/useAllServices';
 
 const Services = () => {
 
-    const { data: services = [], isLoading: servicesLoading } = useQuery({
-        queryKey: ['services'],
-        queryFn: async () => {
-            const result = await fetch('/api/services')
-            return result.json()
-        }
-    })
+    const { services } = useAllServices()
 
     return (
         <div className="min-h-screen bg-slate-50/50 py-8 sm:py-12 px-4 sm:px-6 lg:px-8">

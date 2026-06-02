@@ -1,19 +1,13 @@
 'use client'
-import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import React from 'react';
-import { FaCheck, FaEye, FaFileAlt, FaInbox, FaTimes, FaUserCheck } from 'react-icons/fa';
+import { FaCheck, FaEye, FaFileAlt, FaInbox, FaTimes, FaUser, FaUserCheck } from 'react-icons/fa';
 import Swal from 'sweetalert2';
+import useApplicationsData from '../../../../hooks/useApplicationsData';
 
 const CaregiverApplications = () => {
 
-    const { data: applications = [], refetch } = useQuery({
-        queryKey: ['caregivers'],
-        queryFn: async () => {
-            const result = await fetch('/api/caregivers')
-            return result.json()
-        }
-    })
+    const { applications, refetch } = useApplicationsData()
 
     const approveApplication = async id => {
 
@@ -30,7 +24,7 @@ const CaregiverApplications = () => {
 
                 const approvedStatus = { status: "approved" }
 
-                const response = await fetch(`/api/caregivers/${id}`, {
+                const response = await fetch(`/api/caregiver-applications/${id}`, {
                     method: 'PATCH',
                     headers: { 'Content-type': 'application/json' },
                     body: JSON.stringify(approvedStatus)
@@ -39,12 +33,27 @@ const CaregiverApplications = () => {
                 const result = await response.json()
 
                 if (result?.success) {
-
-                    refetch().then(() => Swal.fire('Approved!', 'You had approved the application.', 'success'))
-                    // Swal.fire('Approved!', 'You had approved the application.', 'success')
+                    refetch().then(() => reassignRole(id))
                 }
             }
         })
+    }
+
+    const reassignRole = async id => {
+
+        const caregiver = applications.find(application => application?._id === id)
+
+        const res = await fetch(`/api/users/${caregiver?.userId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ role: 'caregiver' })
+        })
+
+        const result = await res.json()
+
+        if (result?.success) {
+            Swal.fire('Approved!', 'You had approved the application.', 'success')
+        }
     }
 
     const rejectApplication = async id => {
@@ -62,7 +71,7 @@ const CaregiverApplications = () => {
 
                 const rejectedStatus = { status: "rejected" }
 
-                const response = await fetch(`/api/caregivers/${id}`, {
+                const response = await fetch(`/api/caregiver-applications/${id}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(rejectedStatus)
@@ -71,7 +80,6 @@ const CaregiverApplications = () => {
 
                 if (result?.success) {
                     refetch().then(() => Swal.fire('Rejected!', 'You had rejected the application.', 'success'))
-                    // Swal.fire('Rejected!', 'You had rejected the application.', 'success')
                 }
             }
         })
@@ -158,14 +166,25 @@ const CaregiverApplications = () => {
                                         {/* Operational Action Rigging */}
                                         <td className="px-6 py-5 text-right">
                                             <div className="flex justify-end gap-1">
-                                                <Link
-                                                    href={`/caregivers/${app._id}`}
-                                                    className="p-2.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-all"
-                                                    title="Inspect Detailed Profile"
-                                                >
-                                                    <FaEye size={16} />
-                                                </Link>
-                                                {app.status === 'pending' && (
+                                                {
+                                                    app?.status !== 'rejected' && <Link
+                                                        href={`/dashboard/admin/caregiver-applications/${app?._id}`}
+                                                        className="p-2.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-all"
+                                                        title="Inspect Detailed Profile"
+                                                    >
+                                                        <FaEye size={16} />
+                                                    </Link>
+                                                }
+                                                {
+                                                    app?.status === 'approved' && <Link
+                                                        href={`/caregivers/${app?._id}`}
+                                                        className="p-2.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-all"
+                                                        title="Inspect Detailed Profile"
+                                                    >
+                                                        <FaUser size={16} />
+                                                    </Link>
+                                                }
+                                                {app?.status === 'pending' && (
                                                     <>
                                                         <button
                                                             onClick={() => approveApplication(app._id)}
@@ -244,12 +263,23 @@ const CaregiverApplications = () => {
                                     )}
 
                                     <div className="flex gap-1.5">
-                                        <Link
-                                            href={`/caregivers/${app._id}`}
-                                            className="p-2 text-slate-500 bg-slate-100 rounded-lg hover:text-teal-600 hover:bg-teal-50 transition-all"
-                                        >
-                                            <FaEye size={14} />
-                                        </Link>
+                                        {app?.status !== 'rejected' &&
+                                            <Link
+                                                href={`/dashboard/admin/caregiver-applications/${app?._id}`}
+                                                className="p-2 text-slate-500 bg-slate-100 rounded-lg hover:text-teal-600 hover:bg-teal-50 transition-all"
+                                            >
+                                                <FaEye size={12} />
+                                            </Link>
+                                        }
+                                        {
+                                            app?.status === 'approved' &&
+                                            <Link
+                                                href={`/caregivers/${app?._id}`}
+                                                className="p-2 text-slate-500 bg-slate-100 rounded-lg hover:text-teal-600 hover:bg-teal-50 transition-all"
+                                            >
+                                                <FaUser size={12} />
+                                            </Link>
+                                        }
                                         {app.status === 'pending' && (
                                             <>
                                                 <button

@@ -1,80 +1,75 @@
 'use client'
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, CheckCircle2, Clock, ExternalLink } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import Swal from 'sweetalert2';
 import useUserData from '../../../hooks/useUserData';
-import usePersistanceHandler from '../../../hooks/useUnsavedChangesWarning';
 import useUnsavedChangesHandler from '../../../hooks/useUnsavedChangesWarning';
+import useMyApplication from '../../../hooks/useMyApplication';
 
 const ApplyCaregiver = () => {
 
-  const { data: existingApplication = {}, refetch } = useQuery({
-    queryKey: ['existingApplication'],
-    queryFn: async () => {
-      const res = await fetch('/api/caregivers/apply')
-      return res.json()
-    }
-  })
+  const { status } = useSession()
 
-  const user = useUserData()
+  const { user, isLoading } = useUserData()
 
-  const { exists, application_status } = existingApplication
+  const { exists, application_status, refetch } = useMyApplication()
 
   const {
     handleSubmit,
     register,
     formState: { isSubmitting, isDirty },
     watch,
-    reset
+    reset,
+    control
   } = useForm()
-
-  const { status } = useSession()
-  // console.log({ ...rest, status, data })
 
   const [isHydrated, setIsHydrated] = useState(false)
 
-  const applicationData = watch()
-  const { name, email, ...rest } = applicationData
+  const applicationDetails = useWatch({ control })
 
   useEffect(() => {
-    if (!isHydrated || status === 'unauthenticated') return;
+    if (status !== 'authenticated' && !isHydrated) return;
+
     const timeout = setTimeout(() => {
       localStorage.setItem(
         'applicationData',
-        JSON.stringify({ ...rest })
+        JSON.stringify(applicationDetails)
       );
-    }, 300)
+    }, 500)
     return () => clearTimeout(timeout)
-  }, [isHydrated, status, rest])
 
-  // useEffect(() => {
-  // if (status === 'unauthenticated') return
-  // reset({
-  // name: user?.name,
-  // email: user?.email,
-  // phone: user?.phone
-  // })
-  // }, [reset, status, user?.name, user?.email, user?.phone])
+  }, [isHydrated, status, applicationDetails])
 
   useEffect(() => {
-    if (status === 'unauthenticated' || isHydrated === true) return;
+    if (status !== 'authenticated' && isHydrated === true) return;
+
     const saved = localStorage.getItem('applicationData')
+    const parsedData = JSON.parse(saved)
+
     if (saved) {
-      const parsedData = JSON.parse(saved)
       reset({
-        ...parsedData,
+        ...parsedData
+      })
+      setTimeout(() => {
+        setIsHydrated(true)
+      }, 300)
+    }
+
+    else if (user && Object.keys(user).length > 0) {
+      reset({
         name: user?.name,
         email: user?.email,
-        phone: user?.phone || parsedData?.phone
+        phone: user?.phone
       })
     }
-    setIsHydrated(true)
-  }, [reset, status, user?.name, user?.email, user?.phone, isHydrated])
+    setTimeout(() => {
+      setIsHydrated(true)
+    }, 300)
+  }, [reset, status, isHydrated, user])
 
   const router = useRouter()
 
@@ -85,9 +80,7 @@ const ApplyCaregiver = () => {
   useEffect(() => {
     if (status === 'unauthenticated') return;
     const savedUrl = localStorage.getItem("uploadedDocument")
-    // const savedName = localStorage.getItem("uploadedDocumentName")
     if (savedUrl) setUploadedUrl(savedUrl)
-    // if (savedName) setFileName(savedName)
   }, [status])
 
   // ================================
@@ -132,6 +125,10 @@ const ApplyCaregiver = () => {
 
   const [fileError, setFileError] = useState('')
 
+  if (status === 'authenticated' && isLoading) {
+    return <>Loading...</>
+  }
+
   const allowedTypes = [
     'application/pdf',
     'image/jpeg',
@@ -150,10 +147,6 @@ const ApplyCaregiver = () => {
         'Only PDF, JPG or PNG files are allowed.'
       )
 
-      // e.target.value = ''
-
-      // setUploadedUrl(null)
-
       return
     }
 
@@ -161,10 +154,6 @@ const ApplyCaregiver = () => {
       setFileError(
         'Maximum file size is 5MB.'
       )
-
-      // e.target.value = ''
-
-      // setUploadedUrl(null)
 
       return
     }
@@ -234,7 +223,7 @@ const ApplyCaregiver = () => {
 
     console.log(application)
 
-    const res = await fetch('/api/caregivers/apply', {
+    const res = await fetch('/api/caregiver-applications', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(application),
@@ -423,15 +412,8 @@ const ApplyCaregiver = () => {
                   pattern={field.name === 'phone' ? "[0-9+ ]*" : undefined}
                   placeholder={field.placeholder}
                   disabled={
-                    field.name === 'name' ? user?.name :
-                      field.name === 'email' ? user?.email :
-                        field.name === 'phone' ? user?.phone : false
+                    field.name === 'email' ? user?.email && watch('email') : false
                   }
-                  // defaultValue={
-                  // field.name === 'name' ? user?.name :
-                  // field.name === 'email' ? user?.email :
-                  // (field.name === 'phone' && user?.contact) ? user?.contact : false
-                  // }
                   className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 focus:ring-4 focus:ring-teal-500/5 focus:border-teal-500 focus:bg-white outline-none transition-all font-medium text-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
                 />
               </div>
@@ -539,7 +521,8 @@ const ApplyCaregiver = () => {
           {/* Terms */}
           <label className="flex items-start gap-4 bg-slate-50 p-6 rounded-2xl border border-slate-100 cursor-pointer hover:bg-slate-100/50 transition-colors">
             <input
-              {...register('agreedToTerms', { required: true })}
+              {...register('agreedToTerms')}
+              required
               type="checkbox"
               className="w-6 h-6 accent-teal-600 rounded-lg cursor-pointer mt-0.5 border-none shadow-inner"
             />
