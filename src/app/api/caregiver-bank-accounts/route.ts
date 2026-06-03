@@ -1,3 +1,4 @@
+import { auth } from "../../../lib/authOptions"
 import { collections, dbConnect } from "../../../lib/dbConnect"
 
 export async function POST(req) {
@@ -5,7 +6,16 @@ export async function POST(req) {
 
     const { account_number } = payload
 
-    const account = { ...payload, account_number_last4: account_number.slice(-4), is_verified: false, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
+    const { user } = await auth()
+    const { id } = user || {}
+
+    const account = { ...payload, caregiver_id: id, account_number_last4: account_number.slice(-4), is_verified: false, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
+
+    const savedAccount = await dbConnect(collections.caregiver_bank_accounts).findOne({ caregiver_id: id })
+
+    if (savedAccount) {
+        return Response.json({ success: false })
+    }
 
     const result = await dbConnect(collections.caregiver_bank_accounts).insertOne(account)
 
@@ -21,8 +31,17 @@ export async function PATCH(req) {
 
 
     if (caregiver_id) {
-        const result = await dbConnect(collections.caregiver_bank_accounts).updateOne({ caregiver_id }, { $set: { ...payload, updated_at: new Date().toISOString() } })
-        return Response.json({ success: result?.modifiedCount })
+        const result = await dbConnect(collections.caregiver_bank_accounts).updateOne({ caregiver_id }, { $set: { ...payload } })
+
+        if (result?.modifiedCount) {
+
+            await dbConnect(collections.caregiver_bank_accounts).updateOne({ caregiver_id }, { $set: { updated_at: new Date().toISOString() } })
+
+            return Response.json({ success: result?.modifiedCount })
+        }
+        else {
+            return Response.json({ success: false })
+        }
     }
 }
 

@@ -18,7 +18,7 @@ const useSignOutHandler = () => {
                 localStorage.removeItem('uploadedDocumentType')
                 localStorage.removeItem('uploadedDocumentName')
                 localStorage.removeItem(`caregiver-availability-draft-${id}`)
-                localStorage.removeItem(`bank-account_${id}`)
+                localStorage.removeItem(`bank-account-${id}`)
             })
     }
 

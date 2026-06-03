@@ -21,7 +21,7 @@ export async function GET(req: Request) {
     let result;
 
     if (caregiver_id) {
-        result = await dbConnect(collections.schedules).findOne({ caregiver_id })
+        result = await dbConnect(collections.schedules).find({ caregiver_id }).toArray()
     }
 
     else if (status) {

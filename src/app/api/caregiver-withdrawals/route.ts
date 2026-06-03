@@ -1,4 +1,5 @@
 import { collections, dbConnect } from "../../../lib/dbConnect"
+import Withdrawals from "../../dashboard/admin/withdrawals/page"
 
 export async function POST(req) {
 
@@ -12,23 +13,47 @@ export async function POST(req) {
 }
 
 export async function GET(req) {
+
     const { searchParams } = new URL(req.url)
 
     const caregiver_id = searchParams.get("caregiver_id")
     const status = searchParams.get("status")
 
-    let result
+    let result = []
 
     if (caregiver_id && status) {
+        const withdrawals = await dbConnect(collections.withdrawals)
+            .find({ caregiver_id, status })
+            .sort({ paid_at: -1 })
+            .limit(1)
+            .toArray()
 
-        const withdrawals = await dbConnect(collections.withdrawals).find({ caregiver_id, status }).sort({ paid_at: -1 }).limit(1).toArray()
+        const withdrawal = withdrawals[0] || null
 
-        result = withdrawals[0] || null
+        if (!withdrawal) {
+            return Response.json(null)
+        }
+
+        return Response.json({
+            ...withdrawal,
+            _id: withdrawal?._id.toString()
+        })
     }
 
-    else if (caregiver_id) {
-        result = await dbConnect(collections.withdrawals).find({ caregiver_id }).toArray()
+    if (caregiver_id) {
+        result = await dbConnect(collections.withdrawals)
+            .find({ caregiver_id })
+            .toArray()
     }
 
-    return Response.json(result)
+    else {
+        result = await dbConnect(collections.withdrawals).find().toArray()
+    }
+
+    const serialized = result.map(withdrawal => ({
+        ...withdrawal,
+        _id: withdrawal?._id.toString()
+    }))
+
+    return Response.json(serialized)
 }

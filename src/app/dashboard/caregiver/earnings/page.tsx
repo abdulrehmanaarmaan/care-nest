@@ -63,17 +63,18 @@ const Earnings = () => {
         [bookings]
     )
 
-    const { data: withdrawal, refetch: refetchWithdrawals } = useQuery({
+    const { data: withdrawal } = useQuery({
         queryKey: ['withdrawal', id],
         queryFn: async () => {
-            const result = await fetch(`/api/withdrawals?caregiver_id=${id}&status=Paid`)
+            const result = await fetch(`/api/caregiver-withdrawals?caregiver_id=${id}&status=Paid`)
             return result.json()
-        }
+        },
+        enabled: !!id
     })
 
     const { bankAccount } = useBankAccount(id)
 
-    const { withdrawals } = useWithdrawals(id)
+    const { withdrawals, refetch } = useWithdrawals(id)
 
     const transactions = useMemo(() => {
 
@@ -108,51 +109,66 @@ const Earnings = () => {
 
     const requestWithdrawal = async () => {
 
-        const eligibleBooking =
-            bookings.filter(
-                booking =>
-                    booking?.payout_status === 'Available'
-            )
+        Swal.fire({
+            title: 'Request Withdrawal?',
+            text: `Submit a payout request for $${availableBalance.toFixed(2)}?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Submit Request',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#0f766e'
+        }).then(async res => {
 
-        const bookingIds = eligibleBooking.map(booking => booking?._id)
+            if (res?.isConfirmed) {
 
-        const withdrawal = {
-            caregiver_id: id,
-            caregiver_name: name,
-            caregiver_email: email,
-            amount: availableBalance,
-            status: 'Pending',
-            booking_ids: bookingIds
-        }
+                const eligibleBooking = bookings.filter(booking => booking?.payout_status === 'Available')
 
-        const res = await fetch('api/caregiver-withdrawals', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(withdrawal)
-        })
+                const bookingIds = eligibleBooking.map(booking => booking?._id)
 
-        const result = await res.json()
+                const withdrawal = {
+                    caregiver_id: id,
+                    caregiver_name: name,
+                    caregiver_email: email,
+                    amount: availableBalance,
+                    status: 'Pending',
+                    booking_ids: bookingIds
+                }
 
-        if (result?.success) {
-            const payoutRes = await fetch('/api/bookings', {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    booking_ids: bookingIds,
-                    payout_status: 'Requested'
+                const res = await fetch('/api/caregiver-withdrawals', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(withdrawal)
                 })
-            })
 
-            const payoutResult = await payoutRes.json()
+                const result = await res.json()
 
-            if (payoutResult?.success) {
-                refetchBookings()
-                refetchWithdrawals()
-                Swal.fire('Done', 'Withdrawal successfully made', 'success')
+                if (result?.success) {
+                    const payoutRes = await fetch('/api/bookings', {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            booking_ids: bookingIds,
+                            payout_status: 'Requested'
+                        })
+                    })
+
+                    const payoutResult = await payoutRes.json()
+
+                    if (payoutResult?.success) {
+                        refetch()
+                        refetchBookings()
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Withdrawal Requested',
+                            text: `$${availableBalance.toFixed(2)} has been submitted for payout review.`,
+                            confirmButtonColor: '#0f766e'
+                        })
+                    }
+                }
             }
-        }
+        })
     }
 
     return (
@@ -265,7 +281,7 @@ const Earnings = () => {
                         {transactions.length ?
                             transactions.map((tx) => (
                                 <div
-                                    key={tx._id}
+                                    key={tx?._id}
                                     className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-slate-50/50 border border-slate-100 rounded-2xl text-xs hover:bg-slate-50 transition-colors"
                                 >
                                     <div className="flex items-center gap-3">
@@ -273,16 +289,16 @@ const Earnings = () => {
                                             <FaExchangeAlt size={10} />
                                         </div>
                                         <div>
-                                            <h4 className="font-extrabold text-slate-800 leading-tight">{tx.title}</h4>
+                                            <h4 className="font-extrabold text-slate-800 leading-tight">{tx?.title}</h4>
                                             <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
                                                 Service Recipient
-                                                Status: {tx.status}
+                                                Status: {tx?.status}
                                             </p>
                                         </div>
                                     </div>
 
                                     <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 sm:gap-1 mt-1 sm:mt-0 border-t sm:border-0 border-slate-100 pt-2 sm:pt-0">
-                                        <span className="text-[10px] text-slate-400 font-semibold">{new Date(tx.date).toLocaleDateString(
+                                        <span className="text-[10px] text-slate-400 font-semibold">{new Date(tx?.date).toLocaleDateString(
                                             'en-US',
                                             {
                                                 month: 'short',
@@ -290,13 +306,13 @@ const Earnings = () => {
                                             }
                                         )}</span>
                                         <div className="flex items-center gap-2">
-                                            <span className="font-black text-slate-900">${tx.amount.toFixed(2)}</span>
+                                            <span className="font-black text-slate-900">${tx?.amount.toFixed(2)}</span>
                                             <span
-                                                className={`w-2 h-2 rounded-full ${tx.status === 'Paid'
+                                                className={`w-2 h-2 rounded-full ${tx?.status === 'Paid'
                                                     ? 'bg-emerald-500'
-                                                    : tx.status === 'Processing'
+                                                    : tx?.status === 'Processing'
                                                         ? 'bg-blue-500'
-                                                        : tx.status === 'Rejected'
+                                                        : tx?.status === 'Rejected'
                                                             ? 'bg-rose-500'
                                                             : 'bg-amber-500'
                                                     }`}
@@ -391,7 +407,7 @@ const Earnings = () => {
                         </div>
                     )}
 
-                    {bankAccount?._id && availableBalance <= 0 && (
+                    {(bankAccount?._id && availableBalance <= 0) && (
                         <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 text-[10px] text-amber-800 font-semibold leading-relaxed">
                             You need available earnings before requesting a withdrawal.
                         </div>

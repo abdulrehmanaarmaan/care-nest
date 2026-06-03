@@ -7,46 +7,71 @@ import { toast } from 'sonner';
 
 const Withdrawals = () => {
 
-    const { withdrawals } = useWithdrawals()
+    const { withdrawals, refetch } = useWithdrawals()
 
     const approveWithdrawal = async withdrawal => {
 
-        const res = await fetch(`/api/caregiver-withdrawals/${withdrawal?._id}?status=Processing`, {
-            method: 'PATCH'
+        Swal.fire({
+            title: 'Approve Withdrawal?',
+            text: `Move this withdrawal request to Processing?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Approve',
+            confirmButtonColor: '#0f766e'
+        }).then(async res => {
+            if (res?.isConfirmed) {
+                const res = await fetch(`/api/caregiver-withdrawals/${withdrawal?._id}?status=Processing`, {
+                    method: 'PATCH'
+                })
+                const result = await res.json()
+                if (result?.success) {
+                    changePayoutStatus(withdrawal, 'Processing')
+                }
+            }
         })
-
-        const result = await res.json()
-
-        if (result?.success) {
-            changePayoutStatus(withdrawal, 'Processing')
-        }
     }
 
     const rejectWithdrawal = async withdrawal => {
 
-        const res = await fetch(`/api/caregiver-withdrawals/${withdrawal?._id}?status=Rejected`, {
-            method: 'PATCH'
+        Swal.fire({
+            title: 'Reject Withdrawal?',
+            text: 'This payout request will be rejected.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Reject',
+            confirmButtonColor: '#dc2626'
+        }).then(async res => {
+            if (res?.isConfirmed) {
+                const res = await fetch(`/api/caregiver-withdrawals/${withdrawal?._id}?status=Rejected`, {
+                    method: 'PATCH'
+                })
+                const result = await res.json()
+                if (result.success) {
+                    changePayoutStatus(withdrawal, 'Available')
+                }
+            }
         })
-
-        const result = await res.json()
-
-        if (result.success) {
-            changePayoutStatus(withdrawal, 'Rejected')
-        }
-
     }
 
     const markPaid = async withdrawal => {
-
-        const res = await fetch(`/api/caregiver-withdrawals/${withdrawal?._id}?status=Paid`, {
-            method: 'PATCH'
+        Swal.fire({
+            title: 'Mark as Paid?',
+            text: 'Confirm that the payout has been successfully transferred.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Mark Paid',
+            confirmButtonColor: '#059669'
+        }).then(async res => {
+            if (res?.isConfirmed) {
+                const res = await fetch(`/api/caregiver-withdrawals/${withdrawal?._id}?status=Paid`, {
+                    method: 'PATCH'
+                })
+                const result = await res.json()
+                if (result?.success) {
+                    changePayoutStatus(withdrawal, 'Paid')
+                }
+            }
         })
-
-        const result = await res.json()
-
-        if (result?.success) {
-            changePayoutStatus(withdrawal, 'Paid')
-        }
     }
 
     const changePayoutStatus = async (withdrawal, status) => {
@@ -65,7 +90,8 @@ const Withdrawals = () => {
         const payoutResult = await payoutRes.json()
 
         if (payoutResult?.success) {
-            return toast.success(status === 'Processing' ? 'Withdrawal approved and marked as Processing!' : status === 'Rejected' ? 'Withdrawal rejected and marked as Rejected!' : 'Withdrawal marked as Paid!')
+            refetch()
+            return toast.success(status === 'Processing' ? 'Withdrawal request approved' : status === 'Available' ? 'Withdrawal request rejected' : 'Withdrawal marked as paid')
         }
     }
 

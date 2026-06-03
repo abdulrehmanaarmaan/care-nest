@@ -5,15 +5,16 @@ import React, { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { FaCheckCircle, FaClock, FaCreditCard, FaEye, FaEyeSlash, FaIdCard, FaShieldAlt, FaUniversity, FaUserCheck } from 'react-icons/fa';
 import useBankAccount from '../../../../hooks/useBankAccount';
+import Swal from 'sweetalert2';
 
 const BankAccount = () => {
 
     const { data, status } = useSession()
     const { id, name } = data?.user || {}
 
-    const { bankAccount, isLoading } = useBankAccount(id)
+    const { bankAccount, isLoading, refetch } = useBankAccount(id)
 
-    const { handleSubmit, register, reset, control, formState: { isSubmitting } } = useForm()
+    const { handleSubmit, register, reset, control, formState: { isSubmitting, isDirty } } = useForm()
 
     const [isHydrated, setIsHydrated] = useState(false)
 
@@ -21,10 +22,10 @@ const BankAccount = () => {
 
     const accountDetails = useWatch({ control })
 
-    const storageKey = `bank-account_${id}`
+    const storageKey = `bank-account-${id}`
 
     useEffect(() => {
-        if (status !== 'authenticated' && !id && !isHydrated) return
+        if (status !== 'authenticated' && !isHydrated) return
         const timeout = setTimeout(() => {
             localStorage.setItem(
                 storageKey,
@@ -35,7 +36,7 @@ const BankAccount = () => {
     }, [status, id, storageKey, accountDetails, isHydrated])
 
     useEffect(() => {
-        if (status !== 'authenticated' && !id && isHydrated) return
+        if (status !== 'authenticated' && isHydrated) return
 
         const savedDraft = localStorage.getItem(storageKey)
 
@@ -49,29 +50,34 @@ const BankAccount = () => {
 
         else if (bankAccount && Object.keys(bankAccount).length > 0) {
             reset({
-                account_holder_name: name
+                account_holder_name: bankAccount?.account_holder_name,
+                bank_name: bankAccount?.bank_name,
+                account_number: bankAccount?.account_number,
+                routing_number: bankAccount?.routing_number
             })
+        }
+
+        else if (name) {
+            reset({ account_holder_name: name })
         }
         setTimeout(() => {
             setIsHydrated(true)
         }, 300)
-    }, [status, id, storageKey, reset, name, bankAccount, isHydrated])
+    }, [status, id, storageKey, reset, bankAccount, isHydrated, name])
 
-    // if (isLoading) {
-    // return <>Loading...</>
-    // }
+    if (isLoading) {
+        return <>Loading...</>
+    }
 
-    // const { account_holder_name, bank_name, account_number, routing_number } = bankAccount
+    // const { _id, account_number_last4, updated_at, bank_name, is_verified } = bankAccount
 
     const saveBankAccount = async data => {
 
         const { account_holder_name, bank_name, account_number, routing_number } = data
 
-        const account = {
-            account_holder_name, bank_name, account_number, routing_number
-        }
+        const account = { account_holder_name, bank_name, account_number, routing_number }
 
-        if (!bankAccount && Object.keys(bankAccount).length === 0) {
+        if (bankAccount && Object.keys(bankAccount).length > 0) {
 
             const res = await fetch(`/api/caregiver-bank-accounts?caregiver_id=${id}`, {
                 method: 'PATCH',
@@ -80,15 +86,23 @@ const BankAccount = () => {
                 },
                 body: JSON.stringify(account)
             })
-
             const result = await res.json()
-
             if (result?.success) {
-                alert('Bank account updated successfully!')
+                refetch()
+
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'Bank account updated',
+                    showConfirmButton: false,
+                    timer: 2500,
+                    timerProgressBar: true
+                })
             }
         }
 
-        else {
+        else if (isDirty) {
 
             const res = await fetch('/api/caregiver-bank-accounts', {
                 method: 'POST',
@@ -97,11 +111,19 @@ const BankAccount = () => {
                 },
                 body: JSON.stringify(account)
             })
-
             const result = await res.json()
-
             if (result?.success) {
-                alert('Bank account added successfully!')
+                refetch()
+
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'Bank account saved',
+                    showConfirmButton: false,
+                    timer: 2500,
+                    timerProgressBar: true
+                })
             }
         }
     }
@@ -197,8 +219,8 @@ const BankAccount = () => {
                                         <input
                                             type={showAccountNumber ? 'text' : 'password'}
                                             {...register('account_number')}
-                                            min={6}
-                                            max={30}
+                                            minLength={6}
+                                            maxLength={30}
                                             className="w-full border border-slate-200 bg-slate-50/30 rounded-xl pl-11 pr-4 py-3 text-sm font-semibold text-slate-800 outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all placeholder:text-slate-400 tracking-wide"
                                             placeholder="Full Account Number"
                                             required
@@ -227,10 +249,9 @@ const BankAccount = () => {
                                         <input
                                             type="text"
                                             {...register('routing_number')}
-                                            min={3}
-                                            max={20}
+                                            minLength={3}
+                                            maxLength={20}
                                             className="w-full border border-slate-200 bg-slate-50/30 rounded-xl pl-11 pr-4 py-3 text-sm font-semibold text-slate-800 outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all placeholder:text-slate-400"
-                                            placeholder="9-Digit Transit Code"
                                             required
                                         />
                                     </div>
@@ -240,7 +261,7 @@ const BankAccount = () => {
                             {/* SAVE BUTTON */}
                             <button
                                 type="submit"
-                                disabled={isSubmitting}
+                                disabled={!isDirty || isSubmitting}
                                 className="w-full bg-slate-900 text-white hover:bg-teal-600 disabled:bg-slate-700 px-5 py-3.5 rounded-xl font-black text-xs uppercase tracking-wider shadow-sm transition-all duration-300 active:scale-[0.99] cursor-pointer mt-2"
                             >
                                 {isSubmitting ? 'Processing Audit Securely...' : 'Save Bank Account'}
@@ -260,10 +281,10 @@ const BankAccount = () => {
                                     Active Payout Account
                                 </p>
                                 <h2 className="text-base font-black text-slate-900 tracking-tight mt-1.5 flex items-center gap-2">
-                                    {bankAccount ? `${bankAccount.bank_name} (•••• ${bankAccount.account_number_last4})` : 'No Saved Account'}
+                                    {bankAccount?._id ? `${bankAccount?.bank_name} (•••• ${bankAccount?.account_number_last4})` : 'No Saved Account'}
                                 </h2>
                                 <p className="text-[10px] text-slate-400 font-semibold">
-                                    Last synchronized: {bankAccount?.updated_at ? new Date(bankAccount.updated_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Never'}
+                                    Last synchronized: {bankAccount?.updated_at ? new Date(bankAccount?.updated_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Never'}
                                 </p>
                             </div>
 

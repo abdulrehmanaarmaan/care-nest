@@ -6,7 +6,7 @@ const useBookingsData = (status = null, caregiver_id = null) => {
 
     const { data: bookings = [], refetch } = useQuery({
 
-        queryKey: ['bookings', status],
+        queryKey: ['bookings', status, caregiver_id],
 
         queryFn: async () => {
 

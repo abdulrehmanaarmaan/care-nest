@@ -4,12 +4,12 @@ import React from 'react';
 
 const useWithdrawals = (id = null) => {
 
-    const { data: withdrawals = [] } = useQuery({
+    const { data: withdrawals = [], refetch } = useQuery({
         queryKey: ['withdrawals', id],
 
         queryFn: async () => {
 
-            const url = id ? `/api/withdrawals?caregiver_id=${id}` : '/api/withdrawals'
+            const url = id ? `/api/caregiver-withdrawals?caregiver_id=${id}` : '/api/caregiver-withdrawals'
 
             const result = await fetch(url)
             return result.json()
@@ -18,7 +18,7 @@ const useWithdrawals = (id = null) => {
         enabled: id ? !!id : true
     })
 
-    return { withdrawals };
+    return { withdrawals, refetch };
 };
 
 export default useWithdrawals;

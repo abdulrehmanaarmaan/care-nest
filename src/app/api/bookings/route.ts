@@ -1,3 +1,4 @@
+import { ObjectId } from "mongodb"
 import { collections, dbConnect } from "../../../lib/dbConnect"
 
 export async function POST(req) {
@@ -56,7 +57,10 @@ export async function PATCH(req) {
         $set: { payout_status }
     }
 
-    const result = await dbConnect(collections.bookings).updateMany({ _id: { $in: booking_ids } }, updates)
+    const result = await dbConnect(collections?.bookings).updateMany({ _id: { $in: booking_ids.map(id => new ObjectId(id)) } }, updates)
+
+    console.log(result)
+    console.log(booking_ids)
 
     return Response.json({ success: result?.modifiedCount })
 }
