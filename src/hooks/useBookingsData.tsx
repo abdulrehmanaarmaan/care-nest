@@ -4,7 +4,7 @@ import React from 'react';
 
 const useBookingsData = (status = null, caregiver_id = null) => {
 
-    const { data: bookings = [], refetch } = useQuery({
+    const { data: bookings = [], isLoading, refetch } = useQuery({
 
         queryKey: ['bookings', status, caregiver_id],
 
@@ -21,7 +21,7 @@ const useBookingsData = (status = null, caregiver_id = null) => {
         enabled: status ? !!status : caregiver_id ? (!!status && !!caregiver_id) : true
     })
 
-    return { bookings, refetch };
+    return { bookings, isLoading, refetch };
 };
 
 export default useBookingsData;

@@ -1,23 +1,13 @@
 'use client'
-import { useQuery } from '@tanstack/react-query';
-import { useSession } from 'next-auth/react';
 import React, { useState } from 'react';
 import Swal from 'sweetalert2';
+import useMyJobs from '../../../../hooks/useMyJobs';
 
 const Jobs = () => {
 
-    const { data } = useSession()
-    const { id } = data?.user || {}
-
     const [jobStatus, setJobStatus] = useState('all')
 
-    const { data: jobs = [], isLoading, refetch } = useQuery({
-        queryKey: ['jobs', id, jobStatus],
-        queryFn: async () => {
-            const res = await fetch(`/api/jobs?caregiver_id=${id}&status=${jobStatus}`)
-            return res.json()
-        }
-    })
+    const { jobs, isLoading, refetch } = useMyJobs(jobStatus)
 
     const [expandedNotes, setExpandedNotes] = useState({});
 

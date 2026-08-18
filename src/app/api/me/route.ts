@@ -3,7 +3,9 @@ import { auth } from "../../../lib/authOptions";
 import { collections, dbConnect } from "../../../lib/dbConnect";
 
 export async function GET() {
-    const { user } = await auth()
+    const session = await auth()
+
+    const { user } = session
 
     const { id } = user || {}
 

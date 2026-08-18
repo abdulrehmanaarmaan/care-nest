@@ -472,7 +472,7 @@ const Analytics = () => {
                                 </LineChart>
                             </ResponsiveContainer>
                         ) : (
-                            <div className="h-[300px] rounded-2xl bg-slate-50 border border-dashed border-slate-200 flex flex-col items-center justify-center text-center px-6">
+                            <div className="h-75 rounded-2xl bg-slate-50 border border-dashed border-slate-200 flex flex-col items-center justify-center text-center px-6 py-20">
                                 <FaMoneyBillWave className="text-slate-300 text-2xl mb-3" />
 
                                 <h4 className="text-sm font-bold text-slate-700">

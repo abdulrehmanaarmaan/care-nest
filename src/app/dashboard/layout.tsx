@@ -1,7 +1,6 @@
 'use client'
 import Link from 'next/link';
 import React, { Suspense, useState } from 'react';
-import { useSession } from 'next-auth/react';
 import { FaBars, FaChevronLeft, FaClipboardList, FaSignOutAlt } from 'react-icons/fa';
 import UserMenu from '../components/UserMenu';
 import DashboardLoader from './loading';
@@ -9,7 +8,7 @@ import useSignOutHandler from '../../hooks/useSignOutHandler';
 import useUserData from '../../hooks/useUserData';
 import CaregiverBanner from '../components/banner/CaregiverBanner';
 import { usePathname, useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import useMySchedule from '../../hooks/useMySchedule';
 
 const Dashboard = ({ children }) => {
 
@@ -30,23 +29,14 @@ const Dashboard = ({ children }) => {
 
     const { division, district } = address || {}
 
-    const { data } = useSession()
-    const { id } = data?.user || {}
-
-    const { data: savedSchedule = {} } = useQuery({
-        queryKey: ['saved_schedule', id],
-        enabled: !!id,
-        queryFn: async () => {
-            const res = await fetch(`/api/caregiver-schedules?caregiver_id=${id}`)
-            return res.json()
-        }
-    })
+    const { savedSchedule } = useMySchedule()
 
     const pathname = usePathname()
 
+    console.log(savedSchedule)
     const showLocationBanner = role === 'caregiver' && !division && !district && pathname !== '/dashboard/profile'
 
-    const showAvailabilityBanner = role === 'caregiver' && division && district && !savedSchedule?._id && pathname !== '/dashboard/caregiver/availability'
+    const showAvailabilityBanner = role === 'caregiver' && !division && !district && !savedSchedule?.caregiver_id && pathname !== '/dashboard/caregiver/availability'
 
     return (
         <div className="flex min-h-screen bg-slate-50 font-sans">

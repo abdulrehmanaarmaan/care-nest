@@ -6,7 +6,7 @@ import useUserData from '../../hooks/useUserData';
 
 const UserMenu = () => {
 
-    const user = useUserData()
+    const { user } = useUserData()
     const { name } = user || {}
 
     return (

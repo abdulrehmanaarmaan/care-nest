@@ -40,7 +40,7 @@ const BookingAllocationConsole = () => {
         return <>Loading...</>
     }
 
-    const { _id, status, service_name, booked_at, location, pricing, customer, payment_status, payment_intent, paid_at, approved_at, caregiver_id, allocation_notes, is_emergency } = booking
+    const { _id, status, service_name, booked_at, visit_date, visit_start_time, visit_end_time, location, pricing, customer, payment_status, payment_intent, paid_at, approved_at, caregiver_id, allocation_notes, is_emergency } = booking
     const { district, division, detailed_address } = location
 
     const basedOnRequest = schedules.filter(schedule => schedule?.accepts_emergency_requests === is_emergency)
@@ -116,6 +116,9 @@ const BookingAllocationConsole = () => {
                     unit,
                     total_amount
                 },
+                visit_date,
+                visit_start_time,
+                visit_end_time,
                 customer: {
                     name,
                     email,
@@ -152,6 +155,22 @@ const BookingAllocationConsole = () => {
                     text: 'The booking has been assigned successfully.',
                     timer: 2000,
                     showConfirmButton: false
+                })
+
+                const notification = {
+                    recipient_id: caregiver_id,
+                    recipient_role: 'caregiver',
+                    type: 'job_assigned',
+                    title: "New Job Assigned",
+                    message: `You have been assigned a ${service_name} service in ${district}, ${division}.`,
+                    reference_type: "job",
+                    reference_id: jobResult?.success,
+                    is_read: false,
+                }
+                await fetch('/api/caregiver-notifications', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(notification)
                 })
             }
         }

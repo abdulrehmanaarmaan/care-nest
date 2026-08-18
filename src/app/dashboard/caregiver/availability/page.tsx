@@ -6,6 +6,7 @@ import { Controller, useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
 import useUnsavedChangesHandler from '../../../../hooks/useUnsavedChangesWarning';
 import { usePathname } from 'next/navigation';
+import useMySchedule from '../../../../hooks/useMySchedule';
 
 interface AvailabilitySchema {
     enabled: boolean;
@@ -21,16 +22,7 @@ const Availability = () => {
     const { data, status } = useSession()
     const { id } = data?.user || {}
 
-    const { data: savedSchedule = {}, refetch } = useQuery({
-        queryKey: ['saved_schedule', id],
-        enabled: !!id,
-        queryFn: async () => {
-            const res = await fetch(`/api/caregiver-schedules?caregiver_id=${id}`)
-            return res.json()
-        }
-    })
-
-    const { timezone, status: availability_status } = savedSchedule || {}
+    const { savedSchedule, isLoading, refetch } = useMySchedule()
 
     const { handleSubmit, register, control, reset, setValue, formState: { isSubmitting, isDirty } } = useForm<AvailabilitySchema>({
         defaultValues: {
@@ -65,13 +57,12 @@ const Availability = () => {
 
     useEffect(() => {
 
-        if (status !== 'authenticated' && !id && isHydrated) return
+        if ((status !== 'authenticated' || !id) && isHydrated) return
 
         const savedDraft = localStorage.getItem(storageKey)
 
-        const parsedDraft = JSON.parse(savedDraft)
-
         if (savedDraft) {
+            const parsedDraft = JSON.parse(savedDraft)
             reset(parsedDraft)
 
             setTimeout(() => {
@@ -106,6 +97,14 @@ const Availability = () => {
 
     useUnsavedChangesHandler({ hasUnsavedChanges, pathname })
 
+    if (isLoading) {
+        return <>Loading...</>
+    }
+
+    console.log(savedSchedule)
+
+    const { timezone, status: availability_status } = savedSchedule
+
     const saveAvailability = async (data) => {
 
         const { enabled, days, start_time, end_time, accepts_emergency_requests, max_daily_assignments } = data
@@ -134,7 +133,6 @@ const Availability = () => {
             if (result?.success) {
                 refetch()
                 toast.success('Availability updated successfully')
-                localStorage.removeItem(storageKey)
             }
 
             else {
@@ -154,7 +152,6 @@ const Availability = () => {
             if (result?.success) {
                 refetch()
                 toast.success('Schedule saved successfully')
-                localStorage.removeItem(storageKey)
             }
         }
     }

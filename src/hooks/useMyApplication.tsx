@@ -11,7 +11,7 @@ const useMyApplication = () => {
 
     const { data: savedApplication = {}, refetch } = useQuery({
 
-        queryKey: ['application', id],
+        queryKey: ['my_application', id],
 
         queryFn: async () => {
             const res = await fetch(`/api/caregiver-applications?userId=${id}`)

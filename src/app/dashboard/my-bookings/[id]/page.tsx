@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import React from 'react';
 import { FaArrowLeft, FaCalendarCheck, FaClock, FaMapMarkerAlt, FaReceipt, FaUser } from 'react-icons/fa';
 import { auth } from '../../../../lib/authOptions';
 import { getBooking } from '../../../server/actions/bookings';
+import Review from '../../../components/Review';
 
 const BookingDetails = async ({ params }) => {
 
@@ -16,7 +16,7 @@ const BookingDetails = async ({ params }) => {
         notFound()
     }
 
-    const { booked_at, service_name, pricing, location, status } = booking
+    const { booked_at, service_name, pricing, location, status, caregiver_id } = booking
     const { quantity, unit, base_price, total_amount } = pricing
 
     return (
@@ -109,6 +109,11 @@ const BookingDetails = async ({ params }) => {
                                 </div>
                             </div>
                         </div>
+
+                        {/* ... End of Section 3 Payment Summary Wrapper </div> ... */}
+
+                        {/* INSERT INLINE REVIEW SECTION HERE */}
+                        <Review status={status} id={id} caregiver_id={caregiver_id} />
                     </div>
                 </div>
                 {/* Footer Disclaimer */}

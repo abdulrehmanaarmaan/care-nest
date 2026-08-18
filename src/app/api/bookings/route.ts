@@ -46,21 +46,3 @@ export async function GET(req) {
 
     return Response.json(result)
 }
-
-export async function PATCH(req) {
-
-    const payload = await req.json()
-
-    const { booking_ids, payout_status } = payload
-
-    const updates = {
-        $set: { payout_status }
-    }
-
-    const result = await dbConnect(collections?.bookings).updateMany({ _id: { $in: booking_ids.map(id => new ObjectId(id)) } }, updates)
-
-    console.log(result)
-    console.log(booking_ids)
-
-    return Response.json({ success: result?.modifiedCount })
-}

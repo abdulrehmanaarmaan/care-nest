@@ -9,13 +9,25 @@ const useCaregiversData = () => {
     const [specialization, setSpecialization] = useState('')
 
     const { data: caregivers = [] } = useQuery({
+
         queryKey: ['caregivers', search, specialization],
+
         queryFn: async () => {
-            const url = (search && specialization) ? `/api/caregiver-applications?status=approved&search=${search}&specialization=${specialization}` : '/api/caregiver-applications?status=approved'
+
+            const params = new URLSearchParams({
+                status: 'approved'
+            })
+
+            if (search) params.append('search', search)
+            if (specialization) params.append('specialization', specialization)
+
+            const url = `/api/caregiver-applications?${params.toString()}`
+
             const result = await fetch(url)
             return result.json()
         },
-        enabled: (search && search) ? (!!search && !!specialization) : true
+
+        enabled: search ? !!search : specialization ? !!specialization : (search && specialization) ? (!!search && !!specialization) : true
     })
 
     return { caregivers, search, setSearch, specialization, setSpecialization };

@@ -27,7 +27,7 @@ interface Query {
 
 export async function GET(req) {
 
-    const { searchParams } = await new URL(req.url)
+    const { searchParams } = new URL(req.url)
 
     const userId = searchParams.get('userId')
     const status = searchParams.get("status")

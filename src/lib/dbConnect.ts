@@ -12,7 +12,9 @@ export const collections = {
     jobs: 'jobs',
     schedules: 'schedules',
     withdrawals: 'withdrawals',
-    caregiver_bank_accounts: 'caregiver_bank_accounts'
+    caregiver_bank_accounts: 'caregiver_bank_accounts',
+    caregiver_reviews: 'caregiver_reviews',
+    caregiver_notifications: 'caregiver_notifications'
 }
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version

@@ -1,9 +1,9 @@
 'use client'
 import { HeartHandshake, LogOut, Menu, User, X } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import NavLink from './NavLink';
 import Link from 'next/link';
-import { signOut, useSession } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import useSignOutHandler from '../../../hooks/useSignOutHandler';
 import Image from 'next/image';
 import useUserData from '../../../hooks/useUserData';
@@ -23,7 +23,11 @@ const Navbar = () => {
 
     const navLinks =
         <>
-            <li><NavLink href='/dashboard/my-bookings'>My Bookings</NavLink></li>
+            <li><NavLink href='/'>Home</NavLink></li>
+            <li><NavLink href='/caregivers'>Find Caregivers</NavLink></li>
+            <li><NavLink href='/services'>Services</NavLink></li>
+            <li><NavLink href='/become-a-caregiver'>Become a Caregiver</NavLink></li>
+            <li><NavLink href='/about'>About</NavLink></li>
         </>
 
     return (

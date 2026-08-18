@@ -6,7 +6,7 @@ import Swal from 'sweetalert2';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AuthButton from '../../components/auth/AuthButton';
 import { FaEnvelope, FaEye, FaEyeSlash, FaLock } from 'react-icons/fa';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import usePasswordState from '../../../hooks/usePasswordState';
 import { login } from '../../server/actions/auth';
 import useUserData from '../../../hooks/useUserData';
@@ -37,8 +37,6 @@ const Login = () => {
 
     useEffect(() => {
         if (status === "authenticated") {
-            // Use REPLACE, not PUSH. This overwrites the 'Login' entry 
-            // in the browser history with the 'Home' entry.
             router.replace('/');
         }
     }, [status, router]);
@@ -88,7 +86,6 @@ const Login = () => {
                             router.replace(callbackUrl)
                             router.refresh()
                             refetch()
-                            // router.refresh()
                         })
                 }
             }

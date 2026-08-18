@@ -20,13 +20,13 @@ export async function GET(req: Request) {
 
     let result;
 
+    const allSchedules = await dbConnect(collections.schedules).find().toArray()
+
     if (caregiver_id) {
         result = await dbConnect(collections.schedules).find({ caregiver_id }).toArray()
     }
 
     else if (status) {
-
-        const all = await dbConnect(collections.schedules).find({}).toArray()
 
         const now = new Date()
 
@@ -36,13 +36,13 @@ export async function GET(req: Request) {
 
         const currentTime = now.toTimeString().slice(0, 5)
 
-        const activeSchedules = await all.filter(availability => availability?.enabled === true && availability?.status === status && availability?.days.includes(currentDay) && availability?.start_time <= currentTime && availability?.end_time > currentTime)
+        const activeSchedules = await allSchedules.filter(availability => availability?.enabled === true && availability?.status === status && availability?.days.includes(currentDay) && availability?.start_time <= currentTime && availability?.end_time > currentTime)
 
         result = [...activeSchedules]
     }
 
     else {
-        result = await dbConnect(collections.schedules).find().toArray()
+        result = [...allSchedules]
     }
 
     return Response.json(result)

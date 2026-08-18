@@ -25,7 +25,7 @@ const Withdrawals = () => {
                 })
                 const result = await res.json()
                 if (result?.success) {
-                    changePayoutStatus(withdrawal, 'Processing')
+                    changePayoutStatus(withdrawal, 'processing')
                 }
             }
         })
@@ -46,8 +46,8 @@ const Withdrawals = () => {
                     method: 'PATCH'
                 })
                 const result = await res.json()
-                if (result.success) {
-                    changePayoutStatus(withdrawal, 'Available')
+                if (result?.success) {
+                    changePayoutStatus(withdrawal, 'available')
                 }
             }
         })
@@ -68,7 +68,23 @@ const Withdrawals = () => {
                 })
                 const result = await res.json()
                 if (result?.success) {
-                    changePayoutStatus(withdrawal, 'Paid')
+                    changePayoutStatus(withdrawal, 'paid')
+
+                    const notification = {
+                        recipient_id: withdrawal?.caregiver_id,
+                        recipient_role: 'caregiver',
+                        type: 'payout_processed',
+                        title: "Payout Processed",
+                        message: "Your payout for a completed service has been processed.",
+                        reference_type: "withdrawal",
+                        reference_id: withdrawal?._id,
+                        is_read: false,
+                    }
+                    await fetch('/api/caregiver-notifications', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(notification)
+                    })
                 }
             }
         })
@@ -76,7 +92,7 @@ const Withdrawals = () => {
 
     const changePayoutStatus = async (withdrawal, status) => {
 
-        const payoutRes = await fetch('/api/bookings', {
+        const payoutRes = await fetch('/api/jobs', {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json'
@@ -91,7 +107,7 @@ const Withdrawals = () => {
 
         if (payoutResult?.success) {
             refetch()
-            return toast.success(status === 'Processing' ? 'Withdrawal request approved' : status === 'Available' ? 'Withdrawal request rejected' : 'Withdrawal marked as paid')
+            return toast.success(status === 'processing' ? 'Withdrawal request approved' : status === 'available' ? 'Withdrawal request rejected' : 'Withdrawal marked as paid')
         }
     }
 

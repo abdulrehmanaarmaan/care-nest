@@ -127,7 +127,7 @@ const Booking = () => {
         setIsBooking(true)
 
         try {
-            const { district, detailed_address } = data
+            const { visit_date, visit_start_time, visit_end_time, district, detailed_address } = data
 
             const booking = {
                 service_id: id,
@@ -143,6 +143,9 @@ const Booking = () => {
                     unit: unit,
                     total_amount: totalCost,
                 },
+                visit_date,
+                visit_start_time,
+                visit_end_time,
                 is_emergency,
                 location: {
                     division: region,
@@ -273,6 +276,87 @@ const Booking = () => {
                                 </div>
                             </div>
                         </section>
+
+                        {/* STEP 2: CARE SCHEDULE */}
+
+                        <section className="bg-white shadow-sm border border-slate-200 rounded-[2rem] p-8 hover:border-teal-100 transition-colors">
+                            <div className="flex items-center gap-4 mb-8">
+                                <span className="w-10 h-10 bg-teal-600 text-white rounded-2xl flex items-center justify-center font-bold shadow-lg shadow-teal-600/20">
+                                    2
+                                </span>
+                                <h3 className="text-xl font-bold text-slate-800">
+                                    Care Schedule
+                                </h3>
+                            </div>
+
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                                {/* Visit Date */}
+                                <div className="space-y-2 md:col-span-3">
+                                    <label className="block text-sm font-bold text-slate-700 ml-1">
+                                        Care Date
+                                    </label>
+
+                                    <input
+                                        type="date"
+                                        {...register('visit_date', { required: true })}
+                                        min={new Date().toISOString().split('T')[0]}
+                                        className="w-full border-2 border-slate-100 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 outline-none transition-all font-medium text-slate-700"
+                                    />
+                                </div>
+
+                                {/* Start Time */}
+                                <div className="space-y-2">
+                                    <label className="block text-sm font-bold text-slate-700 ml-1">
+                                        Start Time
+                                    </label>
+
+                                    <input
+                                        type="time"
+                                        {...register('visit_start_time', { required: true })}
+                                        className="w-full border-2 border-slate-100 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 outline-none transition-all font-medium text-slate-700"
+                                    />
+                                </div>
+
+                                {/* End Time */}
+                                <div className="space-y-2">
+                                    <label className="block text-sm font-bold text-slate-700 ml-1">
+                                        End Time
+                                    </label>
+
+                                    <input
+                                        type="time"
+                                        {...register('visit_end_time', { required: true })}
+                                        className="w-full border-2 border-slate-100 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 outline-none transition-all font-medium text-slate-700"
+                                    />
+                                </div>
+
+                                {/* Timezone */}
+                                <div className="space-y-2">
+                                    <label className="block text-sm font-bold text-slate-700 ml-1">
+                                        Time Zone
+                                    </label>
+
+                                    <input
+                                        value="Asia/Dhaka"
+                                        disabled
+                                        className="w-full border-2 border-slate-100 bg-slate-50 rounded-2xl px-5 py-4 font-medium text-slate-500"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="mt-6 flex items-start gap-3 p-4 bg-teal-50/50 rounded-xl border border-teal-100/50">
+                                <FaCalendarAlt className="text-teal-600 mt-0.5 flex-shrink-0" />
+
+                                <p className="text-xs text-teal-800 font-semibold leading-relaxed">
+                                    Select when you would like the caregiver to arrive. This schedule
+                                    will be visible to our operations team and assigned caregiver once
+                                    your booking is approved.
+                                </p>
+                            </div>
+                        </section>
+
 
                         {/* Emergency Booking Configuration Module */}
                         <section className="bg-white shadow-sm border border-slate-200 rounded-[2rem] p-6 sm:p-8 hover:border-rose-100 transition-colors duration-300">

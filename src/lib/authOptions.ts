@@ -3,7 +3,6 @@ import Credentials from "next-auth/providers/credentials"
 import { login } from "../app/server/actions/auth"
 import GoogleProvider from "next-auth/providers/google";
 import { collections, dbConnect } from "./dbConnect";
-import bcrypt from 'bcryptjs'
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
     providers: [

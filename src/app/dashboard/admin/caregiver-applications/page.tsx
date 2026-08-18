@@ -53,6 +53,22 @@ const CaregiverApplications = () => {
 
         if (result?.success) {
             Swal.fire('Approved!', 'You had approved the application.', 'success')
+
+            const notification = {
+                recipient_id: caregiver?.userId,
+                recipient_role: 'caregiver',
+                type: 'verification_approved',
+                title: "Verification Approved",
+                message: `Your caregiver profile has been successfully verified.`,
+                reference_type: "profile",
+                reference_id: result?.success,
+                is_read: false,
+            }
+            await fetch('/api/caregiver-notifications', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(notification)
+            })
         }
     }
 
