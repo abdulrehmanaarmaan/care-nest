@@ -9,7 +9,7 @@ const Footer = () => {
         <footer className="bg-slate-900 text-slate-300">
             {/* Main Footer Content */}
             <div className="max-w-7xl mx-auto px-6 pt-20 pb-12">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
                     {/* Column 1: Brand & About */}
                     <div className="space-y-6">
                         <Link href="/" className="flex items-center gap-2 group w-fit">
@@ -47,7 +47,9 @@ const Footer = () => {
                         <ul className="space-y-4 text-sm">
                             <li className="flex items-start gap-3 group">
                                 <MapPin size={18} className="text-teal-500 shrink-0 group-hover:scale-110 transition-transform" />
-                                <span className="text-slate-400">123 Care Street, Gulshan 2,<br />Dhaka, Bangladesh</span>
+                                <span className="text-slate-400">
+                                    {/* 123 Care Street, Gulshan 2,<br /> */}
+                                Chattogram, Bangladesh</span>
                             </li>
                             <li className="flex items-center gap-3 group">
                                 <Phone size={18} className="text-teal-500 shrink-0 group-hover:scale-110 transition-transform" />
@@ -60,7 +62,7 @@ const Footer = () => {
                         </ul>
                     </div>
                     {/* Column 4: Newsletter */}
-                    <div>
+                    {/* <div>
                         <h4 className="text-white font-bold mb-6 uppercase tracking-widest text-xs">Newsletter</h4>
                         <p className="text-sm text-slate-400 mb-4">Stay updated with latest care tips and news.</p>
                         <form className="space-y-3" onSubmit={(e) => e.preventDefault()}>
@@ -73,11 +75,11 @@ const Footer = () => {
                                 Subscribe
                             </button>
                         </form>
-                    </div>
+                    </div> */}
                 </div>
                 {/* Bottom Bar */}
                 <div className="mt-20 pt-8 border-t border-slate-800/60 flex flex-col md:flex-row justify-between items-center gap-6 text-slate-500">
-                    <p>© {new Date().getFullYear()} Care Nest Limited. All rights reserved.</p>
+                    <p>© {new Date().getFullYear()} CareNest. All rights reserved.</p>
                     <div className="flex gap-8 font-medium">
                         <Link href="/privacy" className="hover:text-teal-500 transition">Privacy Policy</Link>
                         <Link href="/terms" className="hover:text-teal-500 transition">Terms of Service</Link>
