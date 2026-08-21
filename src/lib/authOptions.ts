@@ -29,7 +29,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }),
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            authorization: {
+        params: {
+            prompt: "select_account"
+        }
+    }
         })
     ],
 
@@ -108,6 +113,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             const result = await dbConnect(collections?.users).insertOne(newUser)
 
             user.id = result.insertedId.toString()
+            user.account_status= "active"
             return true
         },
     },
