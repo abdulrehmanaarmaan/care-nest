@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link';
 import React, { Suspense, useState } from 'react';
-import { FaBars, FaChevronLeft, FaClipboardList, FaSignOutAlt } from 'react-icons/fa';
+import { FaBars, FaBell, FaBriefcase, FaCalendarAlt, FaChartPie, FaChevronLeft, FaClipboardList, FaLandmark, FaMoneyBillWave, FaSignOutAlt, FaStar, FaUser, FaUserCheck, FaUsers, FaUserShield } from 'react-icons/fa';
 import UserMenu from '../components/UserMenu';
 import DashboardLoader from './loading';
 import useSignOutHandler from '../../hooks/useSignOutHandler';
@@ -17,14 +17,54 @@ const Dashboard = ({ children }) => {
 
     const handleSignOut = useSignOutHandler()
 
-    const navItems = [
-        { name: 'Dashboard', href: '/dashboard' },
-        { name: 'My Bookings', href: '/dashboard/my-bookings', icon: <FaClipboardList /> },
+    const { user } = useUserData()
+
+    // Base links available to every logged-in user
+    const baseNavItems = [
+        { name: 'Dashboard', href: `${user?.role === 'admin' ? '/dashboard/admin' : user?.role === 'caregiver' ? '/dashboard/caregiver' : '/dashboard'}`, icon: <FaClipboardList /> },
+        { name: 'Favorites', href: '/dashboard/favorites', icon: <FaStar /> },
+        { name: 'My Application', href: '/dashboard/my-application', icon: <FaUserCheck /> },
+        { name: 'Profile', href: '/dashboard/profile', icon: <FaUser /> },
+    ];
+
+    // Routes under app/dashboard/admin
+    const adminNavItems = [
+        { name: 'Analytics', href: '/dashboard/admin/analytics', icon: <FaChartPie /> },
+        { name: 'Manage Bookings', href: '/dashboard/admin/bookings', icon: <FaClipboardList /> },
+        { name: 'Caregiver Applications', href: '/dashboard/admin/caregiver-applications', icon: <FaUserShield /> },
+        { name: 'All Caregivers', href: '/dashboard/admin/caregivers', icon: <FaUsers /> },
+        { name: 'All Users', href: '/dashboard/admin/users', icon: <FaUsers /> },
+        { name: 'Withdrawal Requests', href: '/dashboard/admin/withdrawals', icon: <FaMoneyBillWave /> },
+    ];
+
+    // Routes under app/dashboard/caregiver
+    const caregiverNavItems = [
+        { name: 'Availability', href: '/dashboard/caregiver/availability', icon: <FaCalendarAlt /> },
+        { name: 'Bank Account', href: '/dashboard/caregiver/bank-account', icon: <FaLandmark /> },
+        { name: 'Earnings', href: '/dashboard/caregiver/earnings', icon: <FaMoneyBillWave /> },
+        { name: 'Caregiver Jobs', href: '/dashboard/caregiver/jobs', icon: <FaBriefcase /> },
+        { name: 'Notifications', href: '/dashboard/caregiver/notifications', icon: <FaBell /> },
+        { name: 'Reviews', href: '/dashboard/caregiver/reviews', icon: <FaStar /> },
+    ];
+
+    // Select active menu items based on user role
+    const activeNavItems = [
+        ...baseNavItems,
+        ...(user?.role === 'user'
+            ? [
+                {
+                    name: 'My Bookings',
+                    href: '/dashboard/my-bookings',
+                    icon: <FaClipboardList />,
+                },
+            ]
+            : []),
+        ...(user?.role === 'admin' ? adminNavItems : []),
+        ...(user?.role === 'caregiver' ? caregiverNavItems : []),
     ];
 
     const router = useRouter()
 
-    const { user } = useUserData()
     const { role, address } = user || {}
 
     const { division, district } = address || {}
@@ -71,7 +111,7 @@ const Dashboard = ({ children }) => {
 
                 {/* Navigation */}
                 <nav className="flex-1 px-3 space-y-1">
-                    {navItems.map((item) => (
+                    {activeNavItems.map((item) => (
                         <Link
                             key={item.name}
                             href={item.href}

@@ -514,7 +514,7 @@ Create the required environment variables for the application.
 
 ### Clone the Repository
 
-    git clone <your-repository-url>
+    git clone <https://github.com/abdulrehmanaarmaan/care-nest.git>
 
 ### Navigate to the Project
 
