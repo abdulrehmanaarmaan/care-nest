@@ -2,7 +2,7 @@ import { getToken } from 'next-auth/jwt';
 import { NextResponse } from 'next/server';
 import { auth } from './lib/authOptions';
 
-const privateRoutes = ['/booking', '/dashboard']
+const privateRoutes = ['/booking', '/ai-assitant', '/dashboard']
 
 const authRoutes = ['/login', '/registration', '/forgot-password', '/reset-password']
 
@@ -44,5 +44,5 @@ export default auth(async (req) => {
 })
 
 export const config = {
-    matcher: ['/booking/:path*', '/dashboard/:path*', '/login', '/registration', '/forgot-password', '/reset-password'],
+    matcher: ['/booking/:path*', '/ai-assistant', '/dashboard/:path*', '/login', '/registration', '/forgot-password', '/reset-password'],
 }

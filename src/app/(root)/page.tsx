@@ -6,6 +6,7 @@ import LoadingSkeleton from '../components/LoadingSkeleton';
 import Image from 'next/image';
 import useAllServices from '../../hooks/useAllServices';
 import useAllReviews from '../../hooks/useAllReviews';
+import AIAssistantButton from '../components/ai/AIAssistantButton';
 
 export default function Home() {
 
@@ -79,6 +80,7 @@ export default function Home() {
               At Care Nest, we believe caregiving is more than a service—it’s a commitment. We verify every professional so you can focus on
               emotional support.
             </p>
+
             <div className="h-1.5 w-24 bg-teal-600 mx-auto rounded-full"></div>
           </div>
         </section>
@@ -115,6 +117,7 @@ export default function Home() {
             </div>
           </div>
         </section>
+
         {/* ================= TESTIMONIALS ================= */}
         <section className="py-24 px-4">
           <div className="max-w-7xl mx-auto bg-slate-900 text-white rounded-[3.5rem] px-8 lg:px-16 py-20 shadow-2xl">
@@ -151,6 +154,7 @@ export default function Home() {
                   ))
                 )}
             </div>
+
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 py-12 border-t border-slate-800">
               <StatItem num="500+" label="Families Served" />
               <StatItem num="300+" label="Caregivers" />
