@@ -80,7 +80,7 @@ export const login = async (payload): Promise<LoginResult> => {
         }
     }
 
-    if (existingUser.account_status === "deactivated") {
+    if (existingUser?.account_status === "deactivated") {
         return {
             success: false,
             field: "email",

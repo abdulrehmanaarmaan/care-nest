@@ -5,9 +5,9 @@ import { collections, dbConnect } from "../../../lib/dbConnect";
 export async function GET() {
     const session = await auth()
 
-    const { user } = session
+    const user  = session?.user
 
-    const { id } = user || {}
+    const { id } = session?.user || {}
 
     console.log(user)
 

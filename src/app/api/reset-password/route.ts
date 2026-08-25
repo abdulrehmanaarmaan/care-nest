@@ -19,8 +19,8 @@ export async function POST(req: Request) {
             process.env.JWT_SECRET as string
         ) as { email: string };
 
-        const userCollection = dbConnect(collections.users);
-        const user = await userCollection.findOne({ email: decoded.email, provider: "credentials" });
+        const userCollection = await dbConnect(collections.users);
+        const user = await userCollection.findOne({ email: decoded?.email, provider: "credentials" });
 
         if (!user) {
             return Response.json(
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
         // Check if new password matches the old one
         const isSamePassword = await bcrypt.compare(
             password,
-            user.password
+            user?.password
         );
 
         if (isSamePassword) {
@@ -47,16 +47,16 @@ export async function POST(req: Request) {
         }
 
         // Hash the new password
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(password, 12);
 
         // Update password in the database
-        await userCollection.updateOne(
-            { email: decoded.email },
+        const result = await userCollection.updateOne(
+            { email: decoded?.email, provider: 'credentials' },
             { $set: { password: hashedPassword } }
         );
 
         return Response.json({
-            success: true,
+            success: result?.modifiedCount,
             message: "Password reset successfully.",
         });
     } catch (error) {

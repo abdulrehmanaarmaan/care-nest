@@ -14,7 +14,7 @@ export async function POST(req: Request) {
             );
         }
 
-        const userCollection = dbConnect(collections.users);
+        const userCollection = await dbConnect(collections.users);
         const user = await userCollection.findOne({ email, provider: "credentials" });
 
         if (!user) {
@@ -31,11 +31,17 @@ export async function POST(req: Request) {
             { expiresIn: "1h" }
         );
 
-        const resetLink = `${process.env.NEXT_PUBLIC_APP_URL || "https://care-nest-three.vercel.app"}/reset-password?token=${token}`;
+        const appUrl = process.env.APP_URL;
+
+        if (!appUrl) {
+            throw new Error("APP_URL is not configured");
+        }
+
+        const resetLink = `${appUrl}/reset-password?token=${encodeURIComponent(token)}`;
 
         // Send email
         await sendEmail({
-            to: user.email,
+            to: user?.email,
             subject: "Reset Your Care Nest Password",
             html: resetPasswordEmail(user.name, resetLink),
             text: `Reset your password: ${resetLink}`,

@@ -34,7 +34,7 @@ export default function ResetPassword() {
             return;
         }
 
-        if (data.password !== data.confirmPassword) {
+        if (data?.password !== data?.confirmPassword) {
             Swal.fire({
                 title: 'Error!',
                 text: 'Passwords do not match.',
@@ -51,11 +51,13 @@ export default function ResetPassword() {
                 },
                 body: JSON.stringify({
                     token,
-                    password: data.password,
+                    password: data?.password,
                 }),
             });
 
             const result = await res.json();
+
+            if (result?.success) {
 
             Swal.fire({
                 title: result.success ? 'Success!' : 'Error!',
@@ -65,8 +67,9 @@ export default function ResetPassword() {
                 if (result.success) {
                     router.push('/login');
                 }
-            });
-        } catch (error) {
+            })
+        };
+        } catch{
             Swal.fire({
                 title: 'Error!',
                 text: 'Something went wrong. Please try again.',
