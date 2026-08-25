@@ -23,7 +23,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <div>
-      <header>
+      <header className="relative z-50">
         <Navbar />
       </header>
 
