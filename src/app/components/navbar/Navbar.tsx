@@ -90,7 +90,7 @@ const Navbar = () => {
                 </Link>
 
                 {/* ================= DESKTOP MAIN NAVIGATION ================= */}
-                <ul className="hidden lg:flex items-center gap-6 xl:gap-2 text-sm font-bold text-slate-600">
+                <ul className="hidden lg:flex items-center gap-2.5 xl:gap-10 text-sm font-bold text-slate-600">
                     {navLinks}
                 </ul>
 
