@@ -9,6 +9,7 @@ import useAllReviews from '../../hooks/useAllReviews';
 import AIAssistantButton from '../components/ai/AIAssistantButton';
 import useUsersData from '../../hooks/useUsersData';
 import useBookingsData from '../../hooks/useBookingsData';
+import useAvailabilitySchedules from '../../hooks/useAvailabilitySchedules';
 
 export default function Home() {
 
@@ -20,6 +21,8 @@ export default function Home() {
 
   const {bookings: completedBookings} = useBookingsData("Completed")
 
+  const {schedules: activeSchedules} = useAvailabilitySchedules("Active")
+
   const {data: caregiverReviews=[]} = useQuery({
     queryKey: ["caregiver-reviews"],
     queryFn: async () => {
@@ -28,7 +31,9 @@ export default function Home() {
     }
   })
 
-  const activeCaregivers = users.filter(user => user?.role === "Caregiver" && user?.account_status === "active")
+  const caregivers = users.filter(user => user?.role === "Caregiver" && user?.account_status === "active")
+
+  const activeCaregivers = caregivers.filter(caregiver => activeSchedules.find(schedule => schedule?.caregiver_id === caregiver?._id))
 
   const averageCaregiverReviews = caregiverReviews.length
     ? caregiverReviews.reduce(
@@ -177,10 +182,10 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 py-12 border-t border-slate-800">
-              <StatItem num={completedBookings.length} label="Families Served" />
-              <StatItem num={activeCaregivers.length} label="Caregivers" />
+              <StatItem num={completedBookings.length} label="Completed Bookings" />
+              <StatItem num={activeCaregivers.length} label="Active Caregivers" />
               <StatItem num={averageCaregiverReviews.toFixed(1)} label="Average Rating" />
-              <StatItem num="24/7" label="Support" />
+              <StatItem num="24/7" label="Family Support" />
             </div>
           </div>
         </section>
