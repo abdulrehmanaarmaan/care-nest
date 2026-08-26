@@ -57,8 +57,6 @@ export default function ResetPassword() {
 
             const result = await res.json();
 
-            if (result?.success) {
-
             Swal.fire({
                 title: result.success ? 'Success!' : 'Error!',
                 text: result.message,
@@ -67,8 +65,7 @@ export default function ResetPassword() {
                 if (result.success) {
                     router.push('/login');
                 }
-            })
-        };
+            });
         } catch{
             Swal.fire({
                 title: 'Error!',

@@ -7,6 +7,8 @@ import Image from 'next/image';
 import useAllServices from '../../hooks/useAllServices';
 import useAllReviews from '../../hooks/useAllReviews';
 import AIAssistantButton from '../components/ai/AIAssistantButton';
+import useUsersData from '../../hooks/useUsersData';
+import useBookingsData from '../../hooks/useBookingsData';
 
 export default function Home() {
 
@@ -14,7 +16,26 @@ export default function Home() {
 
   const { reviews, isLoading: reviewsLoading } = useAllReviews()
 
-  console.log(services)
+  const {users} = useUsersData()
+
+  const {bookings: completedBookings} = useBookingsData("Completed")
+
+  const {data: caregiverReviews=[]} = useQuery({
+    queryKey: ["caregiver-reviews"],
+    queryFn: async () => {
+      const res = await fetch('/api/caregiver-reviews')
+      return res.json()
+    }
+  })
+
+  const activeCaregivers = users.filter(user => user?.role === "Caregiver" && user?.account_status === "active")
+
+  const averageCaregiverReviews = caregiverReviews.length
+    ? caregiverReviews.reduce(
+        (sum, review) => sum + Number(review?.rating || 0),
+        0
+    ) / caregiverReviews.length
+    : 0;
 
   const scrollToServices = e => {
     e.preventDefault();
@@ -156,9 +177,9 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 py-12 border-t border-slate-800">
-              <StatItem num="500+" label="Families Served" />
-              <StatItem num="300+" label="Caregivers" />
-              <StatItem num="98%" label="Satisfaction" />
+              <StatItem num={completedBookings.length} label="Families Served" />
+              <StatItem num={activeCaregivers.length} label="Caregivers" />
+              <StatItem num={averageCaregiverReviews.toFixed(1)} label="Average Rating" />
               <StatItem num="24/7" label="Support" />
             </div>
           </div>

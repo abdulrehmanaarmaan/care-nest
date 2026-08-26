@@ -59,7 +59,7 @@ export async function POST(req: Request) {
             success: result?.modifiedCount,
             message: "Password reset successfully.",
         });
-    } catch (error) {
+    } catch {
         return Response.json(
             {
                 success: false,

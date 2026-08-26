@@ -31,7 +31,7 @@ export async function POST(req: Request) {
             { expiresIn: "1h" }
         );
 
-        const appUrl = process.env.APP_URL;
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
         if (!appUrl) {
             throw new Error("APP_URL is not configured");
@@ -43,7 +43,7 @@ export async function POST(req: Request) {
         await sendEmail({
             to: user?.email,
             subject: "Reset Your Care Nest Password",
-            html: resetPasswordEmail(user.name, resetLink),
+            html: resetPasswordEmail(user?.name, resetLink),
             text: `Reset your password: ${resetLink}`,
         });
 

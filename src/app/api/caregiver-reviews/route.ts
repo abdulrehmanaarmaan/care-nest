@@ -30,7 +30,7 @@ export async function GET(req) {
     const search_term = searchParams.get('search_term')
     const selected_rating = searchParams.get('selected_rating')
 
-    let result;
+    let result = await dbConnect(collections.caregiver_reviews).find().toArray();
 
     let query: Query = {};
 
