@@ -8,7 +8,8 @@ declare module "next-auth" {
             account_status: "active" | "deactivated";
             name?: string | null;
             email?: string | null;
-            image?: string | null
+            image?: string | null;
+            role: "user" | "caregiver" | "admin"
         }
     }
 
@@ -16,7 +17,8 @@ declare module "next-auth" {
     interface User {
         id: string;
         provider: string;
-        account_status: "active" | "deactivated"
+        account_status: "active" | "deactivated";
+        role: "user" | "caregiver" | "admin"
     }
 }
 
@@ -24,6 +26,7 @@ declare module "next-auth/jwt" {
     interface JWT {
         id: string;
         provider: string;
-        account_status: "active" | "deactivated"
+        account_status: "active" | "deactivated";
+        role: "user" | "caregiver" | "admin"
     }
 }

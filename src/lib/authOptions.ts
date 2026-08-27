@@ -23,7 +23,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     name: user.name,
                     email: user.email,
                     provider: user.provider,
-                    account_status: user.account_status
+                    account_status: user.account_status,
+                    role: user.role
                 }
             },
         }),
@@ -48,6 +49,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 token.id = user.id
                 token.email = user.email
                 token.account_status = user.account_status
+                token.role = user.role
             }
             return token
         },
@@ -62,6 +64,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 session.user.id = token.id
                 session.user.email = token.email
                 session.user.account_status = token.account_status
+                session.user.role = token.role
             }
             return session
         },
@@ -88,6 +91,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
                 user.id = existingUser._id.toString()
                 user.account_status = existingUser.account_status
+                user.role = existingUser.role
                 return true
             }
 
@@ -114,6 +118,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
             user.id = result.insertedId.toString()
             user.account_status= "active"
+            user.role = "user"
             return true
         },
     },

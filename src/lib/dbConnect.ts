@@ -14,7 +14,8 @@ export const collections = {
     withdrawals: 'withdrawals',
     caregiver_bank_accounts: 'caregiver_bank_accounts',
     caregiver_reviews: 'caregiver_reviews',
-    caregiver_notifications: 'caregiver_notifications'
+    caregiver_notifications: 'caregiver_notifications',
+    support_inquiries: 'support_inquiries'
 }
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
